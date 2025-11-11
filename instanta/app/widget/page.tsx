@@ -13,6 +13,8 @@ function CheckoutContent() {
   const currency = searchParams.get("currency") || "USDC";
   const paymentId = searchParams.get("paymentId") || "";
   const title = searchParams.get("title") || "Completar Pago";
+  const merchantId = searchParams.get("merchantId") || "";
+  const callbackUrl = searchParams.get("callbackUrl") || "";
 
   // Mutation para crear el pago
   const createPayment = useMutation(api.payments.create);
@@ -28,9 +30,11 @@ function CheckoutContent() {
         amount: parseFloat(amount),
         currency,
         toAddress,
+        merchantId,
+        callbackUrl,
       });
     }
-  }, [paymentId, amount, toAddress, currency, payment, createPayment]);
+  }, [paymentId, amount, toAddress, currency, payment, createPayment, merchantId, callbackUrl]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
