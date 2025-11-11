@@ -4,9 +4,11 @@ import { v } from "convex/values";
 // Este esquema define cómo se verán nuestros pagos en la base de datos
 export default defineSchema({
   payments: defineTable({
+    paymentId: v.string(),
     // Información básica del pago
     amount: v.number(), // Cuánto debe pagar el usuario
     currency: v.string(), // ETH, USDC, etc.
+    toAddress: v.string(), // A qué dirección se envía el pago
     merchantId: v.string(), // Quién está cobrando
     
     // URLs y callbacks
@@ -33,5 +35,6 @@ export default defineSchema({
     // Índices para buscar rápido (como índice de un libro)
     .index("by_merchant", ["merchantId"])
     .index("by_status", ["status"])
-    .index("by_txHash", ["txHash"]),
+    .index("by_txHash", ["txHash"])
+    .index("by_paymentId", ["paymentId"]),
 });
