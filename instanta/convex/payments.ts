@@ -8,6 +8,8 @@ export const create = mutation({
     currency: v.string(),
     toAddress: v.string(),
     paymentId: v.string(),
+    merchantId: v.string(),
+    callbackUrl: v.string(),
   },
   handler: async (ctx, args) => {
     // Verificar si ya existe un pago con este ID
@@ -27,6 +29,8 @@ export const create = mutation({
       amount: args.amount,
       currency: args.currency,
       toAddress: args.toAddress,
+      merchantId: args.merchantId,
+      callbackUrl: args.callbackUrl,
       status: "pending_wallet", // El usuario aún no ha conectado su wallet
       createdAt: Date.now(),
       expiresAt: Date.now() + 15 * 60 * 1000, // Expira en 15 minutos
