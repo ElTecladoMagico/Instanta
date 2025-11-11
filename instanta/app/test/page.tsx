@@ -1,21 +1,27 @@
+import type { Metadata } from "next";
+import Script from "next/script";
+
+export const metadata: Metadata = {
+  title: "Página de Prueba - SimplePay",
+};
+
 export default function TestPage() {
-    return (
-      <html>
-        <head>
-          <title>Página de Prueba - SimplePay</title>
-          <script src="/button.js"></script>
-        </head>
-        <body style={{ 
-          fontFamily: 'system-ui, sans-serif', 
-          padding: '40px',
-          maxWidth: '800px',
-          margin: '0 auto',
-          backgroundColor: '#f9fafb'
-        }}>
-          <h1 style={{ fontSize: '32px', marginBottom: '8px' }}>
-            Mi Ebook Premium 📚
-          </h1>
-          <p style={{ color: '#666', marginBottom: '32px' }}>
+  return (
+    <>
+      <Script src="/button.js" />
+      <div
+        style={{
+          fontFamily: "system-ui, sans-serif",
+          padding: "40px",
+          maxWidth: "100wh",
+          margin: "0 auto",
+          backgroundColor: "#f9fafb",
+        }}
+      >
+        <h1 style={{ fontSize: "32px", marginBottom: "8px" }}>
+          Mi Ebook Premium 📚
+        </h1>
+        <p style={{ color: '#666', marginBottom: '32px' }}>
             Aprende desarrollo web moderno con este completo ebook de 200 páginas
           </p>
           
@@ -70,7 +76,7 @@ export default function TestPage() {
               Este botón se generó con solo 3 líneas de código. Mira el HTML de esta página para ver cómo.
             </p>
           </div>
-        </body>
-      </html>
-    );
-  }
+        </div>
+    </>
+  );
+}
