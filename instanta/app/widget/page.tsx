@@ -1,19 +1,36 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
-// Este componente interno maneja el checkout
-// Lo separamos para poder usar useSearchParams con Suspense
 function CheckoutContent() {
-  // Leemos los parámetros de la URL
-  // Por ejemplo: /widget?amount=29&to=0xabc...&currency=USDC
   const searchParams = useSearchParams();
   
   const amount = searchParams.get("amount") || "0";
   const toAddress = searchParams.get("to") || "";
   const currency = searchParams.get("currency") || "USDC";
   const paymentId = searchParams.get("paymentId") || "";
+  const title = searchParams.get("title") || "Completar Pago";
+
+  // Mutation para crear el pago
+  const createPayment = useMutation(api.payments.create);
+  
+  // Query para leer el pago en tiempo real
+  const payment = useQuery(api.payments.get, { paymentId });
+
+  // Crear el pago cuando el modal se monta
+  useEffect(() => {
+    if (paymentId && amount && toAddress && !payment) {
+      createPayment({
+        paymentId,
+        amount: parseFloat(amount),
+        currency,
+        toAddress,
+      });
+    }
+  }, [paymentId, amount, toAddress, currency, payment, createPayment]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
@@ -21,7 +38,7 @@ function CheckoutContent() {
         {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Complete su pago
+            {title}
           </h2>
           <p className="text-gray-600 text-sm">
             Pago seguro en Base • Sin comisiones adicionales
@@ -52,31 +69,38 @@ function CheckoutContent() {
           </div>
         </div>
 
-        {/* Botón de acción - por ahora solo muestra el estado */}
+        {/* Estado del pago */}
+        {payment && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              Estado: <span className="font-semibold">{payment.status}</span>
+            </p>
+          </div>
+        )}
+
+        {/* Botón de acción */}
         <button 
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
         >
           Conectar Wallet
         </button>
 
-        {/* Info de debug (la removeremos después) */}
-        <div className="mt-6 p-4 bg-gray-100 rounded-lg text-xs">
-          <p className="text-gray-600">Debug Info:</p>
-          <p className="text-gray-800 font-mono">To: {toAddress.slice(0, 10)}...</p>
-          <p className="text-gray-800 font-mono">Payment ID: {paymentId || "No ID"}</p>
+        {/* Footer con info de seguridad */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-gray-500">
+            🔒 Conexión segura • Tus fondos nunca salen de tu wallet hasta que apruebes la transacción
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-// Componente principal con Suspense
-// Suspense es necesario cuando usamos useSearchParams en Next.js
 export default function WidgetPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Cargando...</div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     }>
       <CheckoutContent />
