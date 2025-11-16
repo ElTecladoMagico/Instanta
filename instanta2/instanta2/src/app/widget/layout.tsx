@@ -26,8 +26,8 @@ export default function WidgetLayout({
     // The WagmiProvider makes wallet hooks available to its children
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        {/* We add a simple white background for the iframe body */}
-        <body style={{ backgroundColor: "white" }}>{children}</body>
+        {/* We NO LONGER add a <body> tag here. It is inherited from the root layout. */}
+        {children}
       </QueryClientProvider>
     </WagmiProvider>
   );
