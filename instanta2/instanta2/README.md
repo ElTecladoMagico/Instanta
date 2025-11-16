@@ -187,7 +187,7 @@ Ahora déjame mostrarte exactamente qué sucede cuando un comprador hace click e
 
 Tiempo total desde que el usuario hizo click en "Comprar" hasta ver "Confirmado": aproximadamente 12 segundos. De esos 12 segundos, unos 5 segundos son el usuario leyendo y confirmando en MetaMask, lo cual es inevitable. El tiempo real de nuestro sistema procesando es solo 7 segundos, lo cual es increíblemente rápido comparado con las pasarelas actuales que tardan 30-60 segundos.
 
-### Por qué esta arquitectura es brillante
+### Por qué esta arquitectura es la que queremos
 
 Permíteme explicarte las decisiones técnicas clave y por qué cada una es la correcta para nuestros objetivos:
 
@@ -218,7 +218,7 @@ Ahora voy a mostrarte exactamente cómo funciona el snippet técnicamente. Esto 
 
 Sí, son 3 líneas. La primera línea carga nuestro JavaScript. Las siguientes 2-3 líneas (dependiendo de cómo las formatees) son el botón HTML con atributos data que especifican el monto, a quién pagar, y en qué moneda.
 
-### Qué Hace ese JavaScript Mágico
+### Qué Hace ese JavaScript de Pago con Botón
 
 Cuando el navegador carga `button.js`, nuestro código hace esto automáticamente:
 
@@ -483,7 +483,7 @@ Dashboard con analytics ($19/mes): Ve gráficos de ventas por día/semana/mes, p
 
 Múltiples wallets de destino ($9/mes): Permite que diferentes productos vayan a diferentes wallets. Útil si tienes partners o quieres separar ingresos de diferentes líneas de producto.
 
-White-label ($49/mes): Remueve el "Powered by SimplePay" del modal y personaliza los colores del brand. Para creadores serios que quieren que toda la experiencia sea su marca.
+White-label ($49/mes): Remueve el "Powered by Instanta" del modal y personaliza los colores del brand. Para creadores serios que quieren que toda la experiencia sea su marca.
 
 La belleza de este modelo es que un creador puede empezar gratis, crecer su negocio usando tu herramienta, y cuando realmente le genera valor, upgrade a features que necesita. No hay fricción al inicio, pero capturas valor cuando demuestras valor.
 
@@ -499,7 +499,7 @@ Facturación y contabilidad: Genera facturas PDF automáticas para cada pago (ú
 
 ## 10. Riesgos Refinados y Mitigaciones Específicas
 
-Ahora que tenemos un plan detallado, revisemos los riesgos con mitigaciones más específicas para nuestra arquitectura:
+Ahora que tenemos un plan detallado, revisemos los riesgos con mitigaciones más específicas para nuestra arquitectura, porque tiene problemas de seguridad gordos, el más gordo actualmente es que **alguien cambie manualmente el código inspeccionando el elemento**, tendré que implementar algo para que esto no lo puedan hacer:
 
 **Riesgo 1: Transacción confirmada pero revertida (receipt.status = 0)**
 
