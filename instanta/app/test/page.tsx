@@ -50,7 +50,7 @@ export default function TestPage() {
               {/* Este es el botón mágico que nuestro script va a mejorar */}
               <button
                 data-pay-amount="29"
-                data-pay-to="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+                data-pay-to="0xae76beedd8dd39878d22e1b7a8ff96e5c5e8b17b"
                 data-pay-currency="USDC"
                 data-pay-title="Ebook: Desarrollo Web Moderno"
               >
