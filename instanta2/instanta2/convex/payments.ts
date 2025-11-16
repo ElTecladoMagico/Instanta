@@ -124,3 +124,5 @@ export const getPayment = query({
         return payment;
     },
 });
+
+/************************Functions to get information from the database**********************************/

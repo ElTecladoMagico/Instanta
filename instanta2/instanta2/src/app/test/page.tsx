@@ -13,8 +13,6 @@ export default function Home() {
     const createPayment = useMutation(api.payments.createPayment);
     return (
         <main className="flex min-h-screen flex-col items-center justify-between p-24">
-
-        <button onClick={ () => createPayment({ paymentId: "123", amount: 100, currency: "USDC", toAddress: "0x123", merchantId: "123", callbackUrl: "http://localhost:3000/callback" }) }>Create Payment</button>
         
         </main>
     );
