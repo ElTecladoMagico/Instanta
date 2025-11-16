@@ -85,3 +85,42 @@ export const createUser = mutation({
 });
 
 /************************Functions to create payments, buttons and users**********************************/
+
+/************************Functions to get information from the database**********************************/
+
+/**
+ * Retrieves a user's information by their ID.
+ */
+export const getUser = query({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        const user = await ctx.db.get(args.userId);
+        return user;
+    },
+});
+
+/**
+ * Retrieves a button's secure information by its ID.
+ */
+export const getButton = query({
+    args: { buttonId: v.id("buttons") },
+    handler: async (ctx, args) => {
+        const button = await ctx.db.get(args.buttonId);
+        return button;
+    },
+});
+
+/**
+ * Retrieves a payment record by its client-generated paymentId.
+ */
+export const getPayment = query({
+    args: { paymentId: v.string() },
+    handler: async (ctx, args) => {
+        // Use the 'by_paymentId' index to find the specific payment
+        const payment = await ctx.db
+            .query("payments")
+            .withIndex("by_paymentId", (q) => q.eq("paymentId", args.paymentId))
+            .unique();
+        return payment;
+    },
+});
