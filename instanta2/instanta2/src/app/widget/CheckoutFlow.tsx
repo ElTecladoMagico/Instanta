@@ -82,7 +82,7 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
 
   if (isConfirmed) {
     return (
-      <div style={{ padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
+      <div style={{ padding: '20px', fontFamily: 'sans-serif', textAlign: 'center', backgroundColor: 'white', minHeight: '100vh' }}>
         <h1>Payment Confirmed!</h1>
         <p>Your transaction has been successfully processed.</p>
         {hash && <p style={{ fontSize: '12px', wordBreak: 'break-all' }}>TxHash: {hash}</p>}
@@ -92,7 +92,7 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
 
   if (isPending || isConfirming) {
     return (
-      <div style={{ padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
+      <div style={{ padding: '20px', fontFamily: 'sans-serif', textAlign: 'center', backgroundColor: 'white', minHeight: '100vh' }}>
         <h1>Processing Payment...</h1>
         <p>{isConfirming ? "Waiting for blockchain confirmation..." : "Please confirm in your wallet."}</p>
         {hash && <p style={{ fontSize: '12px', wordBreak: 'break-all' }}>TxHash: {hash}</p>}
@@ -101,7 +101,7 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
   }
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', textAlign: 'center' }}>
+    <div style={{ padding: '20px', fontFamily: 'sans-serif', textAlign: 'center', backgroundColor: 'white', minHeight: '100vh' }}>
       <h1>{details.title}</h1>
       <p style={{ fontSize: '24px', fontWeight: 'bold', margin: '20px 0' }}>
         {details.amount} {details.currency}
