@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { SignIn } from "../../components/SignIn";
-import { useUser } from "@clerk/nextjs";
+import { SignedIn, SignedOut, useUser } from "@clerk/nextjs";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
@@ -18,11 +18,6 @@ export default function Home() {
     const createUser = useMutation(api.payments.createUser);
 
     useEffect(() => {
-        // Redirect signed-in users to their dedicated page
-        if (isLoaded && isSignedIn) {
-            router.push('/test/user');
-        }
-
         // If the user is signed in but not yet in our database, create them.
         if (isSignedIn && user && userInDb === null) {
             createUser({
@@ -30,7 +25,7 @@ export default function Home() {
                 email: user.primaryEmailAddress?.emailAddress ?? "No email",
             });
         }
-    }, [isLoaded, isSignedIn, user, userInDb, createUser, router]);
+    }, [isSignedIn, user, userInDb, createUser]);
     
     // While Clerk is loading, show a blank screen to prevent flashing
     if (!isLoaded) {
@@ -45,9 +40,26 @@ export default function Home() {
             
             <div className="text-center">
                 <h1 className="text-4xl font-bold">Welcome to Instanta</h1>
-                <p className="text-lg text-gray-600">
-                    The simplest way to accept crypto payments. Please sign in to continue.
-                </p>
+                
+                {/* Show this message if the user is signed out */}
+                <SignedOut>
+                    <p className="text-lg text-gray-600 mt-4">
+                        The simplest way to accept crypto payments. Please sign in to continue.
+                    </p>
+                </SignedOut>
+                
+                {/* Show this message and button if the user is signed in */}
+                <SignedIn>
+                    <p className="text-lg text-gray-600 mt-4">
+                        You are signed in. Go to your dashboard to create a new payment button.
+                    </p>
+                    <button 
+                        onClick={() => router.push('/test/user')}
+                        className="mt-6 px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                    >
+                        Go to User Dashboard
+                    </button>
+                </SignedIn>
             </div>
         </main>
     );
