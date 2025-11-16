@@ -125,4 +125,19 @@ export const getPayment = query({
     },
 });
 
+/**
+ * Retrieves a user record by their Clerk user ID.
+ * This is useful for checking if a user already exists in the database.
+ */
+export const getUserByUserId = query({
+    args: { userId: v.string() },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .unique();
+        return user;
+    },
+});
+
 /************************Functions to get information from the database**********************************/
