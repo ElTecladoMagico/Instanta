@@ -1,36 +1,25 @@
 (function() {
-    // Este código corre inmediatamente cuando el script se carga
-    // Lo envolvemos en una función para no contaminar el namespace global
-    
-    // Configuración
+    // Configuration
     const WIDGET_URL = 'http://localhost:3000/widget';
     
-    // Esta función busca todos los botones de pago en la página
+    // This function finds all payment buttons on the page
     function initializePayButtons() {
-      // Buscar todos los elementos que tengan el atributo data-pay-amount
-      const payButtons = document.querySelectorAll('[data-pay-amount]');
+      // Look for all elements that have our new, secure attribute
+      const payButtons = document.querySelectorAll('[data-instanta-button-id]');
       
-      console.log(`[Instanta] Encontrados ${payButtons.length} botones de pago`);
+      console.log(`[Instanta] Found ${payButtons.length} payment buttons`);
       
-      // Para cada botón encontrado, agregar funcionalidad
       payButtons.forEach(button => {
-        // Leer la configuración del botón desde sus atributos
-        const buttonId = button.getAttribute('data-pay-button-id'); // Puedo hacer que sólo con el ID se obtenga toda la información del botón para poder identificarlo en el backend
-        const amount = button.getAttribute('data-pay-amount');
-        const toAddress = button.getAttribute('data-pay-to');
-        const currency = button.getAttribute('data-pay-currency') || 'USDC';
-        const title = button.getAttribute('data-pay-title') || 'Completar Pago';
+        // Read the secure button ID from its attribute
+        const buttonId = button.getAttribute('data-instanta-button-id');
         
-        // Validar que tengamos la info mínima necesaria
-        if (!amount || !toAddress) {
-          console.error('[Instanta] Botón incompleto, faltan amount o to:', button);
+        // Validate that we have the button ID
+        if (!buttonId) {
+          console.error('[Instanta] Button is missing the data-instanta-button-id attribute:', button);
           return;
         }
         
-        
-        /***************************Estilos básicos del botón***************************/
-        // Agregar estilos básicos al botón si no tiene ninguno
-        // Esto asegura que siempre se vea decente
+        /*************************** Basic Button Styles ***************************/
         if (!button.style.backgroundColor) {
           button.style.padding = '12px 24px';
           button.style.backgroundColor = '#0052FF';
@@ -43,7 +32,6 @@
           button.style.transition = 'all 0.2s';
         }
         
-        // Agregar hover effect
         button.addEventListener('mouseenter', () => {
           button.style.transform = 'scale(1.02)';
           button.style.boxShadow = '0 4px 12px rgba(0, 82, 255, 0.3)';
@@ -54,38 +42,33 @@
           button.style.boxShadow = 'none';
         });
         
-        // Agregar el click handler que abre el modal
+        // Add the click handler that opens the modal
         button.addEventListener('click', (e) => {
-          e.preventDefault(); // Prevenir comportamiento default del botón
-          openPaymentModal(amount, toAddress, currency, title);
+          e.preventDefault(); // Prevent default button behavior
+          // Pass only the secure buttonId to the modal function
+          openPaymentModal(buttonId);
         });
-        /***************************Estilos básicos del botón***************************/
+        /*************************** Basic Button Styles ***************************/
 
-
-        console.log(`[Instanta] Botón inicializado: $${amount} ${currency} → ${toAddress.slice(0, 8)}...`);
+        console.log(`[Instanta] Initialized button with ID: ${buttonId}`);
       });
     }
     
-
-    /*************************** iFrame del widget con estilos ***************************/
-    // Esta función abre el modal de pago
-    function openPaymentModal(amount, toAddress, currency, title) {
-      console.log('[Instanta] Abriendo modal de pago...');
+    /*************************** iFrame Widget with Styles ***************************/
+    // This function opens the payment modal
+    function openPaymentModal(buttonId) {
+      console.log('[Instanta] Opening payment modal for button:', buttonId);
       
-      // Generar un payment ID único para este intento de pago
-      const paymentId = 'pay_' + Math.random().toString(36).slice(2, 10);
+      // Generate a unique payment ID for this payment attempt
+      const paymentId = 'pay_' + Math.random().toString(36).slice(2, 11);
       
-      // Construir la URL del widget con todos los parámetros
+      // Construct the widget URL with only the secure parameters
       const widgetUrl = `${WIDGET_URL}?` + new URLSearchParams({
-        buttonId: buttonId, // ID del botón que se hizo click para poder identificarlo en el backend
-        amount: amount,
-        to: toAddress,
-        currency: currency,
-        title: title,
-        paymentId: paymentId
+        buttonId: buttonId, // The secure ID of the button
+        paymentId: paymentId  // The temporary ID for this specific transaction
       }).toString();
       
-      // Crear el overlay (fondo oscuro semi-transparente)
+      // Create the overlay (dark semi-transparent background)
       const overlay = document.createElement('div');
       overlay.id = 'Instanta-overlay';
       overlay.style.position = 'fixed';
@@ -101,7 +84,7 @@
       overlay.style.justifyContent = 'center';
       overlay.style.animation = 'Instanta-fadein 0.2s ease-out';
       
-      // Crear el iframe que contiene nuestro checkout
+      // Create the iframe that contains our checkout
       const iframe = document.createElement('iframe');
       iframe.src = widgetUrl;
       iframe.style.width = '100%';
@@ -133,24 +116,21 @@
         }
       });
     }
-    /*************************** iFrame del widget con estilos ***************************/
+    /*************************** iFrame Widget with Styles ***************************/
 
-    /*************************** Cierre del modal ***************************/
-    // Esta función cierra el modal
+    /*************************** Modal Closing ***************************/
     function closePaymentModal() {
       const overlay = document.getElementById('Instanta-overlay');
       if (overlay) {
-        // Animar la salida
         overlay.style.animation = 'Instanta-fadeout 0.2s ease-out';
         setTimeout(() => {
           overlay.remove();
         }, 200);
       }
     }
-    /*************************** Cierre del modal ***************************/
+    /*************************** Modal Closing ***************************/
 
-    /*************************** Animaciones CSS ***************************/
-    // Inyectar las animaciones CSS
+    /*************************** CSS Animations ***************************/
     const style = document.createElement('style');
     style.textContent = `
       @keyframes Instanta-fadein {
@@ -175,10 +155,9 @@
       }
     `;
     document.head.appendChild(style);
-    /*************************** Animaciones CSS ***************************/
+    /*************************** CSS Animations ***************************/
 
-    /*************************** Inicialización del modal ***************************/
-    // Inicializar cuando el DOM esté listo
+    /*************************** Modal Initialization ***************************/
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initializePayButtons);
     } else {
@@ -192,7 +171,7 @@
       openModal: openPaymentModal,
       closeModal: closePaymentModal
     };
-    /*************************** Inicialización del modal ***************************/
+    /*************************** Modal Initialization ***************************/
 
-    console.log('[Instanta] Script cargado exitosamente ✓');
-  })();
+    console.log('[Instanta] Script loaded successfully ✓');
+})();
