@@ -59,6 +59,12 @@ export default function Home() {
                     >
                         Go to User Dashboard
                     </button>
+                    <button 
+                        onClick={() => router.push('/test/pay')}
+                        className="mt-6 px-6 py-3 text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                    >
+                        Go to payment page example
+                    </button>
                 </SignedIn>
             </div>
         </main>

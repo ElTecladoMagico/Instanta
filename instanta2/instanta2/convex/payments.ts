@@ -126,6 +126,39 @@ export const getPayment = query({
 });
 
 /**
+ * Updates a payment's status and transaction hash.
+ * This is called by the frontend widget as the transaction progresses.
+ */
+export const updatePayment = mutation({
+    args: {
+        paymentId: v.string(), // The client-side generated 'pay_...' ID
+        txHash: v.optional(v.string()),
+        status: v.union(
+            v.literal("pending"),
+            v.literal("confirmed"),
+            v.literal("failed")
+        ),
+    },
+    handler: async (ctx, args) => {
+        // Find the payment document using its unique paymentId
+        const payment = await ctx.db
+            .query("payments")
+            .withIndex("by_paymentId", (q) => q.eq("paymentId", args.paymentId))
+            .unique();
+
+        if (!payment) {
+            throw new Error("Payment not found");
+        }
+
+        // Use patch to update only the specified fields
+        await ctx.db.patch(payment._id, {
+            status: args.status,
+            txHash: args.txHash,
+        });
+    },
+});
+
+/**
  * Retrieves a user record by their Clerk user ID.
  * This is useful for checking if a user already exists in the database.
  */
