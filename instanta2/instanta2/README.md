@@ -8,6 +8,11 @@ Perfecto. Ahora que tenemos claridad en la dirección, voy a reconstruir complet
 
 Construiremos la primera pasarela de pagos cripto que un creador de contenido puede integrar y usar en literalmente 60 segundos, sin registro, sin KYC, sin configuración. Un solo snippet de 3 líneas que genera un botón de pago para recibir USDC en Base (Layer 2), con detección instantánea de pagos y cero fricción tanto para el comerciante como para el comprador. Completamente gratis para ganar adopción viral entre creadores digitales.
 
+
+<p align="center">
+  <img src="public/Tech_stack.png" alt="Tech stack" width="400"/>
+</p>
+
 ---
 
 ## 2. La Ventaja Competitiva (Por qué esto va a funcionar)
