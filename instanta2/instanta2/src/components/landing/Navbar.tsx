@@ -34,12 +34,12 @@ export function Navbar() {
           {/* Auth Buttons */}
           <div className="flex items-center gap-4">
             <SignedOut>
-              <SignInButton mode="modal">
+              <SignInButton mode="modal" fallbackRedirectUrl="/auth-callback">
                 <button className="text-gray-600 hover:text-gray-900 font-medium text-sm px-4 py-2">
                   Sign In
                 </button>
               </SignInButton>
-              <SignInButton mode="modal">
+              <SignInButton mode="modal" fallbackRedirectUrl="/auth-callback">
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md">
                   Get Started
                 </button>
