@@ -15,7 +15,8 @@ export function CreateButtonForm({ userId, defaultWallet }: CreateButtonFormProp
     // Form state
     const [amount, setAmount] = useState("");
     const [toAddress, setToAddress] = useState(defaultWallet || "");
-    const [currency, setCurrency] = useState("USDC");
+    // TODO: Future versions will support USDC. For now, we use ETH for simplicity.
+    const [currency, setCurrency] = useState("ETH");
     const [title, setTitle] = useState("");
     const [createdButtonId, setCreatedButtonId] = useState<Id<"buttons"> | null>(null);
     const [isCopied, setIsCopied] = useState(false);
@@ -46,7 +47,7 @@ export function CreateButtonForm({ userId, defaultWallet }: CreateButtonFormProp
 
             // Reset form for creating a new button, but keep the wallet address
             setAmount("");
-            setCurrency("USDC");
+            setCurrency("ETH");
             setTitle("");
         } catch (error) {
             console.error("Failed to create button:", error);
@@ -99,10 +100,13 @@ export function CreateButtonForm({ userId, defaultWallet }: CreateButtonFormProp
                                 id="currency" 
                                 value={currency} 
                                 onChange={(e) => setCurrency(e.target.value)} 
-                                placeholder="USDC" 
+                                placeholder="ETH" 
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
+                                disabled
+                                title="Currently only ETH is supported. USDC coming soon!"
                                 required 
                             />
+                            <p className="text-xs text-gray-500 mt-1">Currently only ETH is supported. USDC coming in future versions.</p>
                         </div>
                     </div>
 

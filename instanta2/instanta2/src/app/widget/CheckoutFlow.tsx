@@ -4,8 +4,10 @@ import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { useEffect, useState } from "react";
-import { useAccount, useConnect, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
-import { parseEther } from "viem";
+import { useAccount, useConnect, useSendTransaction, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { parseEther, parseUnits } from "viem";
+import { ERC20_ABI } from "../../../lib/usdc/abi";
+import { USDC_CONTRACT_ADDRESS, USDC_DECIMALS } from "../../../lib/usdc/contract";
 
 interface PaymentDetails {
   amount: number;
@@ -25,8 +27,20 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
   // Wagmi hooks
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
-  const { data: hash, sendTransaction, isPending } = useSendTransaction();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });
+  
+  // For ETH payments
+  const { data: ethHash, sendTransaction, isPending: isEthPending } = useSendTransaction();
+  const { isLoading: isEthConfirming, isSuccess: isEthConfirmed } = useWaitForTransactionReceipt({ hash: ethHash });
+  
+  // For USDC payments
+  const { writeContract, data: usdcHash, isPending: isUsdcPending } = useWriteContract();
+  const { isLoading: isUsdcConfirming, isSuccess: isUsdcConfirmed } = useWaitForTransactionReceipt({ hash: usdcHash });
+  
+  // Unified hash and status (works for both ETH and USDC)
+  const hash = ethHash || usdcHash;
+  const isPending = isEthPending || isUsdcPending;
+  const isConfirming = isEthConfirming || isUsdcConfirming;
+  const isConfirmed = isEthConfirmed || isUsdcConfirmed;
 
   // 1. On component mount, call createPayment to get secure details
   useEffect(() => {
@@ -69,6 +83,19 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
   // Handler for the "Pay" button
   const handlePay = () => {
     if (!details) return;
+    
+    // TODO: Future versions will support USDC and other tokens
+    // For now, we only support ETH for simplicity
+    const isUSDC = details.currency.toUpperCase() === "USDC";
+    
+    if (isUSDC) {
+      // USDC support coming in future versions
+      // For now, send as ETH
+      setError("USDC is not yet supported. Please use ETH.");
+      return;
+    }
+    
+    // Send ETH (native currency)
     sendTransaction({
       to: details.toAddress as `0x${string}`,
       value: parseEther(details.amount.toString()),
