@@ -9,6 +9,7 @@ export default defineSchema({
     userId: v.string(), 
     email: v.string(),
     name: v.optional(v.string()),
+    defaultWallet: v.optional(v.string()),
   }).index("by_userId", ["userId"]),
 
   // Table for each payment button a user creates

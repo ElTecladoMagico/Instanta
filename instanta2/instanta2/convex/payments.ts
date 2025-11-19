@@ -75,11 +75,28 @@ export const createUser = mutation({
     args: {
         email: v.string(),
         userId: v.string(), // This would be the Clerk ID
+        defaultWallet: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
         return await ctx.db.insert("users", {
             email: args.email,
             userId: args.userId,
+            defaultWallet: args.defaultWallet,
+        });
+    },
+});
+
+/**
+ * Updates the user's default wallet address.
+ */
+export const updateUserWallet = mutation({
+    args: {
+        userId: v.id("users"),
+        defaultWallet: v.string(),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.userId, {
+            defaultWallet: args.defaultWallet,
         });
     },
 });
@@ -87,6 +104,20 @@ export const createUser = mutation({
 /************************Functions to create payments, buttons and users**********************************/
 
 /************************Functions to get information from the database**********************************/
+
+/**
+ * Retrieves all buttons created by a specific user.
+ */
+export const getUserButtons = query({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        const buttons = await ctx.db
+            .query("buttons")
+            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .collect();
+        return buttons;
+    },
+});
 
 /**
  * Retrieves a user's information by their ID.
