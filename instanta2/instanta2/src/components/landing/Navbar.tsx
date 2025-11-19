@@ -1,10 +1,12 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { Wallet } from "lucide-react";
 
 export function Navbar() {
+  const { user } = useUser();
+
   return (
     <nav className="w-full border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,12 +47,14 @@ export function Navbar() {
             </SignedOut>
             
             <SignedIn>
-              <Link 
-                href="/test/user"
-                className="text-gray-600 hover:text-blue-600 font-medium text-sm mr-4"
-              >
-                Dashboard
-              </Link>
+              {user && (
+                <Link 
+                  href={`/dashboard/${user.id}`}
+                  className="text-gray-600 hover:text-blue-600 font-medium text-sm mr-4"
+                >
+                  Dashboard
+                </Link>
+              )}
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
           </div>

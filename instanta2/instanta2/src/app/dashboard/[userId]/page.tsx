@@ -8,7 +8,8 @@ import { useEffect, use } from "react";
 import { Onboarding } from "../../../components/dashboard/Onboarding";
 import { CreateButtonForm } from "../../../components/dashboard/CreateButtonForm";
 import { ButtonList } from "../../../components/dashboard/ButtonList";
-import { Navbar } from "../../../components/landing/Navbar";
+import { DashboardNavbar } from "../../../components/dashboard/DashboardNavbar";
+import { ProfileSettings } from "../../../components/dashboard/ProfileSettings";
 
 export default function DashboardPage({ params }: { params: Promise<{ userId: string }> }) {
     const { userId } = use(params);
@@ -60,7 +61,7 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Navbar />
+            <DashboardNavbar />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
@@ -69,9 +70,16 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Create Button */}
-                    <div className="lg:col-span-1">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-4">Create New Button</h2>
-                        <CreateButtonForm userId={userInDb._id} defaultWallet={userInDb.defaultWallet} />
+                    <div className="lg:col-span-1 space-y-8">
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900 mb-4">Create New Button</h2>
+                            <CreateButtonForm userId={userInDb._id} defaultWallet={userInDb.defaultWallet} />
+                        </div>
+
+                        {/* Profile Settings */}
+                        <div>
+                            <ProfileSettings userId={userInDb._id} />
+                        </div>
                     </div>
 
                     {/* Right Column: My Buttons */}
