@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
@@ -201,6 +201,41 @@ export const getUserByUserId = query({
             .withIndex("by_userId", (q) => q.eq("userId", args.userId))
             .unique();
         return user;
+    },
+});
+
+/**
+ * Retrieves all payments with status "pending" that have a txHash.
+ * Used by the blockchain listener to check for confirmations.
+ * This is an internal query so it can be called by the cron job.
+ */
+export const getPendingPayments = internalQuery({
+    args: {},
+    handler: async (ctx) => {
+        const payments = await ctx.db
+            .query("payments")
+            .filter((q) => q.eq(q.field("status"), "pending"))
+            .collect();
+        
+        // Only return payments that have a txHash (transaction was sent)
+        return payments.filter(p => p.txHash);
+    },
+});
+
+/**
+ * Internal mutation to update payment status from blockchain listener.
+ * This is called by the cron job when a transaction is confirmed.
+ */
+export const updatePaymentFromBlockchain = internalMutation({
+    args: {
+        paymentId: v.id("payments"),
+        status: v.union(v.literal("confirmed"), v.literal("failed")),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.paymentId, {
+            status: args.status,
+            ...(args.status === "confirmed" && { completedAt: Date.now() }),
+        });
     },
 });
 

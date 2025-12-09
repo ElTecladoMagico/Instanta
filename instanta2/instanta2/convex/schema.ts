@@ -34,6 +34,7 @@ export default defineSchema({
       v.literal("failed")
     ),
     txHash: v.optional(v.string()), // The blockchain transaction hash
+    completedAt: v.optional(v.number()), // Timestamp when payment was confirmed
   })
     .index("by_buttonId", ["buttonId"])
     .index("by_userId", ["userId"])

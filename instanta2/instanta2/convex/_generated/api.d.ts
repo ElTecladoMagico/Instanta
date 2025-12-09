@@ -8,6 +8,9 @@
  * @module
  */
 
+import type * as blockchain_checkPendingPayments from "../blockchain/checkPendingPayments.js";
+import type * as blockchain_pollReceipt from "../blockchain/pollReceipt.js";
+import type * as crons from "../crons.js";
 import type * as payments from "../payments.js";
 
 import type {
@@ -17,6 +20,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "blockchain/checkPendingPayments": typeof blockchain_checkPendingPayments;
+  "blockchain/pollReceipt": typeof blockchain_pollReceipt;
+  crons: typeof crons;
   payments: typeof payments;
 }>;
 
