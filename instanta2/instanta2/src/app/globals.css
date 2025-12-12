@@ -1,35 +1,407 @@
 @import "tailwindcss";
 
+/* ============================================
+   MATERIAL DESIGN 3 (Material You) Theme
+   Modern crypto payment gateway styling
+   ============================================ */
+
+/* Material Design Color System */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primary palette - Deep Indigo */
+  --md-primary: #3949AB;
+  --md-primary-light: #5C6BC0;
+  --md-primary-dark: #283593;
+  --md-primary-container: #E8EAF6;
+  --md-on-primary: #FFFFFF;
+  --md-on-primary-container: #1A237E;
+  
+  /* Secondary palette - Teal */
+  --md-secondary: #00897B;
+  --md-secondary-light: #4DB6AC;
+  --md-secondary-dark: #00695C;
+  --md-secondary-container: #E0F2F1;
+  --md-on-secondary: #FFFFFF;
+  --md-on-secondary-container: #004D40;
+  
+  /* Tertiary palette - Amber */
+  --md-tertiary: #FF8F00;
+  --md-tertiary-light: #FFB300;
+  --md-tertiary-dark: #FF6F00;
+  --md-tertiary-container: #FFF8E1;
+  --md-on-tertiary: #FFFFFF;
+  --md-on-tertiary-container: #E65100;
+  
+  /* Error palette */
+  --md-error: #D32F2F;
+  --md-error-container: #FFEBEE;
+  --md-on-error: #FFFFFF;
+  --md-on-error-container: #B71C1C;
+  
+  /* Success (custom for crypto) */
+  --md-success: #2E7D32;
+  --md-success-container: #E8F5E9;
+  --md-on-success: #FFFFFF;
+  --md-on-success-container: #1B5E20;
+  
+  /* Surface/Background */
+  --md-background: #FAFAFA;
+  --md-surface: #FFFFFF;
+  --md-surface-dim: #F5F5F5;
+  --md-surface-bright: #FFFFFF;
+  --md-surface-container-lowest: #FFFFFF;
+  --md-surface-container-low: #F8F9FA;
+  --md-surface-container: #F3F4F6;
+  --md-surface-container-high: #EEEFF1;
+  --md-surface-container-highest: #E8EAED;
+  --md-surface-variant: #E7E0EC;
+  
+  /* Text colors */
+  --md-on-background: #1C1B1F;
+  --md-on-surface: #1C1B1F;
+  --md-on-surface-variant: #49454F;
+  
+  /* Outline */
+  --md-outline: #79747E;
+  --md-outline-variant: #CAC4D0;
+  
+  /* Elevation shadows (Material Design spec) */
+  --md-elevation-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+  --md-elevation-2: 0 3px 6px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14);
+  --md-elevation-3: 0 6px 10px rgba(0,0,0,0.12), 0 4px 6px rgba(0,0,0,0.12);
+  --md-elevation-4: 0 10px 20px rgba(0,0,0,0.12), 0 6px 8px rgba(0,0,0,0.12);
+  --md-elevation-5: 0 15px 25px rgba(0,0,0,0.12), 0 10px 10px rgba(0,0,0,0.10);
+  
+  /* Typography scale */
+  --md-font-family: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --md-font-mono: 'Roboto Mono', 'Fira Code', monospace;
+  
+  /* Animation curves (Material Design motion) */
+  --md-motion-standard: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --md-motion-decelerate: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --md-motion-accelerate: cubic-bezier(0.4, 0.0, 1, 1);
+  
+  /* Shape radii */
+  --md-radius-xs: 4px;
+  --md-radius-sm: 8px;
+  --md-radius-md: 12px;
+  --md-radius-lg: 16px;
+  --md-radius-xl: 24px;
+  --md-radius-full: 9999px;
 }
 
 html {
   scroll-behavior: smooth;
 }
 
+/* Theme integration with Tailwind */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--md-background);
+  --color-foreground: var(--md-on-background);
+  --font-sans: var(--md-font-family);
+  --font-mono: var(--md-font-mono);
+  
+  /* Material colors */
+  --color-primary: var(--md-primary);
+  --color-primary-light: var(--md-primary-light);
+  --color-primary-dark: var(--md-primary-dark);
+  --color-primary-container: var(--md-primary-container);
+  --color-on-primary: var(--md-on-primary);
+  
+  --color-secondary: var(--md-secondary);
+  --color-secondary-light: var(--md-secondary-light);
+  --color-secondary-container: var(--md-secondary-container);
+  
+  --color-tertiary: var(--md-tertiary);
+  --color-tertiary-light: var(--md-tertiary-light);
+  --color-tertiary-container: var(--md-tertiary-container);
+  
+  --color-surface: var(--md-surface);
+  --color-surface-dim: var(--md-surface-dim);
+  --color-surface-container: var(--md-surface-container);
+  --color-surface-container-high: var(--md-surface-container-high);
+  
+  --color-error: var(--md-error);
+  --color-error-container: var(--md-error-container);
+  
+  --color-success: var(--md-success);
+  --color-success-container: var(--md-success-container);
+  
+  --color-outline: var(--md-outline);
+  --color-outline-variant: var(--md-outline-variant);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  background: var(--md-background);
+  color: var(--md-on-background);
+  font-family: var(--md-font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Animations */
+/* ============================================
+   Material Design Component Classes
+   ============================================ */
+
+/* Elevated card styles */
+.md-card {
+  background: var(--md-surface);
+  border-radius: var(--md-radius-lg);
+  box-shadow: var(--md-elevation-1);
+  transition: box-shadow 0.2s var(--md-motion-standard),
+              transform 0.2s var(--md-motion-standard);
+}
+
+.md-card:hover {
+  box-shadow: var(--md-elevation-2);
+}
+
+.md-card-elevated {
+  background: var(--md-surface);
+  border-radius: var(--md-radius-lg);
+  box-shadow: var(--md-elevation-2);
+}
+
+.md-card-elevated:hover {
+  box-shadow: var(--md-elevation-4);
+  transform: translateY(-2px);
+}
+
+/* Outlined card */
+.md-card-outlined {
+  background: var(--md-surface);
+  border-radius: var(--md-radius-lg);
+  border: 1px solid var(--md-outline-variant);
+}
+
+/* Filled card */
+.md-card-filled {
+  background: var(--md-surface-container);
+  border-radius: var(--md-radius-lg);
+}
+
+/* Material Buttons */
+.md-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+  padding: 10px 24px;
+  border-radius: var(--md-radius-full);
+  transition: all 0.2s var(--md-motion-standard);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  border: none;
+}
+
+.md-btn-filled {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  box-shadow: var(--md-elevation-1);
+}
+
+.md-btn-filled:hover {
+  box-shadow: var(--md-elevation-2);
+  background: var(--md-primary-light);
+}
+
+.md-btn-filled:active {
+  box-shadow: var(--md-elevation-1);
+}
+
+.md-btn-filled-tonal {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+
+.md-btn-filled-tonal:hover {
+  background: var(--md-secondary-light);
+  color: var(--md-on-secondary);
+}
+
+.md-btn-outlined {
+  background: transparent;
+  color: var(--md-primary);
+  border: 1px solid var(--md-outline);
+}
+
+.md-btn-outlined:hover {
+  background: var(--md-primary-container);
+}
+
+.md-btn-text {
+  background: transparent;
+  color: var(--md-primary);
+}
+
+.md-btn-text:hover {
+  background: var(--md-primary-container);
+}
+
+/* FAB (Floating Action Button) */
+.md-fab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--md-radius-lg);
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  box-shadow: var(--md-elevation-3);
+  transition: all 0.2s var(--md-motion-standard);
+  cursor: pointer;
+  border: none;
+}
+
+.md-fab:hover {
+  box-shadow: var(--md-elevation-4);
+  transform: scale(1.05);
+}
+
+/* Material Input fields */
+.md-input {
+  width: 100%;
+  padding: 16px;
+  font-size: 1rem;
+  background: var(--md-surface-container-low);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--md-radius-sm);
+  color: var(--md-on-surface);
+  transition: all 0.2s var(--md-motion-standard);
+}
+
+.md-input:hover {
+  border-color: var(--md-outline);
+}
+
+.md-input:focus {
+  outline: none;
+  border-color: var(--md-primary);
+  box-shadow: 0 0 0 2px var(--md-primary-container);
+  background: var(--md-surface);
+}
+
+.md-input::placeholder {
+  color: var(--md-on-surface-variant);
+}
+
+/* Filled text field variant */
+.md-input-filled {
+  border: none;
+  border-bottom: 2px solid var(--md-outline-variant);
+  border-radius: var(--md-radius-xs) var(--md-radius-xs) 0 0;
+  background: var(--md-surface-container-highest);
+}
+
+.md-input-filled:focus {
+  border-bottom-color: var(--md-primary);
+  box-shadow: none;
+}
+
+/* Material label */
+.md-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--md-on-surface-variant);
+  margin-bottom: 8px;
+}
+
+/* Chips */
+.md-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--md-radius-sm);
+  background: var(--md-surface-container);
+  color: var(--md-on-surface);
+  border: 1px solid var(--md-outline-variant);
+  transition: all 0.15s var(--md-motion-standard);
+}
+
+.md-chip:hover {
+  background: var(--md-surface-container-high);
+}
+
+.md-chip-selected {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  border-color: transparent;
+}
+
+/* Divider */
+.md-divider {
+  height: 1px;
+  background: var(--md-outline-variant);
+}
+
+/* ============================================
+   Material Animations
+   ============================================ */
+
+/* Ripple effect base */
+.md-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.md-ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, var(--md-primary) 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform 0.5s, opacity 0.5s;
+}
+
+.md-ripple:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
+/* State layer - Material Design hover states */
+.md-state-layer {
+  position: relative;
+}
+
+.md-state-layer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity 0.2s var(--md-motion-standard);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.md-state-layer:hover::before {
+  opacity: 0.08;
+}
+
+.md-state-layer:focus-visible::before {
+  opacity: 0.12;
+}
+
+.md-state-layer:active::before {
+  opacity: 0.12;
+}
+
+/* Animated blob background */
 @keyframes blob {
   0% {
     transform: translate(0px, 0px) scale(1);
@@ -57,10 +429,11 @@ body {
   animation-delay: 4s;
 }
 
+/* Fade in up animation */
 @keyframes fade-in-up {
   0% {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(16px);
   }
   100% {
     opacity: 1;
@@ -69,5 +442,114 @@ body {
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.5s ease-out forwards;
+  animation: fade-in-up 0.4s var(--md-motion-decelerate) forwards;
+}
+
+/* Scale in animation */
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s var(--md-motion-decelerate) forwards;
+}
+
+/* Pulse animation for indicators */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s var(--md-motion-standard) infinite;
+}
+
+/* Skeleton loading */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.md-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--md-surface-container) 0%,
+    var(--md-surface-container-high) 50%,
+    var(--md-surface-container) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--md-radius-sm);
+}
+
+/* ============================================
+   App Bar styles
+   ============================================ */
+
+.md-app-bar {
+  background: var(--md-surface);
+  box-shadow: var(--md-elevation-2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.md-app-bar-transparent {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: none;
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+/* ============================================
+   Custom scrollbar (Material style)
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--md-surface-container);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--md-outline-variant);
+  border-radius: var(--md-radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--md-outline);
+}
+
+/* ============================================
+   Focus visible ring (accessibility)
+   ============================================ */
+
+:focus-visible {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   Selection colors
+   ============================================ */
+
+::selection {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
 }

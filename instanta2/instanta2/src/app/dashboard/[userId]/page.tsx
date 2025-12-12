@@ -15,12 +15,9 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
     const { userId } = use(params);
     const { user, isLoaded, isSignedIn } = useUser();
     const router = useRouter();
-    
-    // Get the user's record from our database
-    // We use the userId from the URL params, but we should verify it matches the logged-in user
+
     const userInDb = useQuery(api.payments.getUserByUserId, user ? { userId: user.id } : "skip");
 
-    // Effect to handle redirection if not signed in or if trying to access another user's dashboard
     useEffect(() => {
         if (isLoaded && !isSignedIn) {
             router.push('/');
@@ -28,7 +25,6 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
         }
 
         if (isLoaded && user && userId !== user.id) {
-            // Redirect to their own dashboard if they try to access someone else's
             router.push(`/dashboard/${user.id}`);
         }
     }, [isLoaded, isSignedIn, user, userId, router]);
@@ -36,43 +32,51 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
     // Loading state
     if (!isLoaded || userInDb === undefined) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-pulse flex flex-col items-center">
-                    <div className="h-8 w-32 bg-gray-200 rounded mb-4"></div>
-                    <div className="h-4 w-48 bg-gray-200 rounded"></div>
+            <div className="min-h-screen flex items-center justify-center bg-[var(--md-background)]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 md-skeleton rounded-xl"></div>
+                    <div className="h-4 w-32 md-skeleton"></div>
                 </div>
             </div>
         );
     }
 
-    // If user is not in DB yet (shouldn't happen if flow is correct, but safety check)
+    // User not in DB yet
     if (userInDb === null) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p>Initializing your account...</p>
+            <div className="min-h-screen flex items-center justify-center bg-[var(--md-background)]">
+                <div className="text-center">
+                    <div className="w-16 h-16 bg-[var(--md-primary-container)] rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse-soft">
+                        <div className="w-8 h-8 bg-[var(--md-primary)]/30 rounded-lg"></div>
+                    </div>
+                    <p className="text-[var(--md-on-surface-variant)]">Initializing your account...</p>
+                </div>
             </div>
         );
     }
 
-    // Check if user has completed onboarding (has a default wallet)
+    // Onboarding
     if (!userInDb.defaultWallet) {
         return <Onboarding userId={userInDb._id} />;
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[var(--md-background)]">
             <DashboardNavbar />
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                    <p className="text-gray-600 mt-1">Manage your payment buttons and settings.</p>
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                <div className="mb-10">
+                    <h1 className="text-3xl font-bold text-[var(--md-on-surface)]">Dashboard</h1>
+                    <p className="text-[var(--md-on-surface-variant)] mt-2">Manage your payment buttons and settings.</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left Column: Create Button */}
                     <div className="lg:col-span-1 space-y-8">
                         <div>
-                            <h2 className="text-xl font-semibold text-gray-900 mb-4">Create New Button</h2>
+                            <h2 className="text-lg font-semibold text-[var(--md-on-surface)] mb-4 flex items-center gap-2">
+                                <span className="w-1.5 h-6 bg-[var(--md-primary)] rounded-full"></span>
+                                Create New Button
+                            </h2>
                             <CreateButtonForm userId={userInDb._id} defaultWallet={userInDb.defaultWallet} />
                         </div>
 
@@ -84,7 +88,10 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
 
                     {/* Right Column: My Buttons */}
                     <div className="lg:col-span-2">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-4">My Buttons</h2>
+                        <h2 className="text-lg font-semibold text-[var(--md-on-surface)] mb-4 flex items-center gap-2">
+                            <span className="w-1.5 h-6 bg-[var(--md-secondary)] rounded-full"></span>
+                            My Buttons
+                        </h2>
                         <ButtonList userId={userInDb._id} />
                     </div>
                 </div>
@@ -92,4 +99,3 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
         </div>
     );
 }
-

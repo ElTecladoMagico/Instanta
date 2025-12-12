@@ -51,15 +51,20 @@ export function WalletSettings({ userId, currentWallet }: WalletSettingsProps) {
     };
 
     return (
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
-                <Wallet className="w-5 h-5 text-gray-500" />
-                <h3 className="font-semibold text-gray-900">Wallet Settings</h3>
+        <div
+            className="bg-[var(--md-surface)] p-6 rounded-2xl border border-[var(--md-outline-variant)]"
+            style={{ boxShadow: 'var(--md-elevation-1)' }}
+        >
+            <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 bg-[var(--md-primary-container)] rounded-xl flex items-center justify-center">
+                    <Wallet className="w-5 h-5 text-[var(--md-primary)]" />
+                </div>
+                <h3 className="font-semibold text-lg text-[var(--md-on-surface)]">Wallet Settings</h3>
             </div>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
+
+            <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                    <label htmlFor="settings-wallet" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="settings-wallet" className="block text-xs font-medium text-[var(--md-on-surface-variant)] mb-2 uppercase tracking-wide">
                         Default Receiving Address
                     </label>
                     <input
@@ -68,21 +73,22 @@ export function WalletSettings({ userId, currentWallet }: WalletSettingsProps) {
                         value={wallet}
                         onChange={(e) => setWallet(e.target.value)}
                         placeholder="0x..."
-                        className={`w-full px-3 py-2 border rounded-lg font-mono text-sm ${
-                            error ? "border-red-300 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
-                        } focus:outline-none focus:ring-2 transition-all`}
+                        className={`w-full px-4 py-3 bg-[var(--md-surface-container-low)] border rounded-xl font-mono text-sm text-[var(--md-on-surface)] ${error
+                                ? "border-[var(--md-error)] focus:ring-[var(--md-error)]"
+                                : "border-[var(--md-outline-variant)] focus:ring-[var(--md-primary)]"
+                            } focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
                     />
                 </div>
 
                 {error && (
-                    <div className="flex items-center gap-2 text-sm text-red-600">
+                    <div className="flex items-center gap-2 text-sm text-[var(--md-error)]">
                         <AlertCircle className="w-4 h-4" />
                         {error}
                     </div>
                 )}
 
                 {success && (
-                    <div className="flex items-center gap-2 text-sm text-green-600">
+                    <div className="flex items-center gap-2 text-sm text-[var(--md-success)]">
                         <Check className="w-4 h-4" />
                         Wallet updated successfully!
                     </div>
@@ -91,7 +97,7 @@ export function WalletSettings({ userId, currentWallet }: WalletSettingsProps) {
                 <button
                     type="submit"
                     disabled={isSubmitting || wallet === currentWallet}
-                    className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--md-primary)] hover:bg-[var(--md-primary-light)] text-white font-medium py-3 px-4 rounded-full transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                 >
                     {isSubmitting ? "Saving..." : (
                         <>
@@ -104,4 +110,3 @@ export function WalletSettings({ userId, currentWallet }: WalletSettingsProps) {
         </div>
     );
 }
-

@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Roboto_Mono } from "next/font/google";
 import { ConvexClientProvider } from "./ConvexClientProvider";
-import {  ClerkProvider, SignInButton, SignUpButton, SignedIn, SignedOut, UserButton  } from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const robotoMono = Roboto_Mono({
+  variable: "--font-roboto-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,11 +28,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // Wrap your entire app with ClerkProvider
     <ClerkProvider>
       <html lang="en">
-        <body>
-          {/* Your Convex provider should be inside ClerkProvider */}
+        <body className={`${inter.variable} ${robotoMono.variable} antialiased`}>
           <ConvexClientProvider>{children}</ConvexClientProvider>
         </body>
       </html>

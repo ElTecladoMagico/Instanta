@@ -7,7 +7,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAccount, useConnect, useSendTransaction, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther, formatGwei } from "viem";
 import { useGasPrice } from "wagmi";
-import { Loader2, Wallet, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, Wallet, CheckCircle, AlertCircle, ExternalLink, Shield } from "lucide-react";
 import confetti from "canvas-confetti";
 
 interface PaymentDetails {
@@ -42,7 +42,7 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
   const isConfirming = isEthConfirming;
   const isConfirmed = isEthConfirmed;
 
-  // Calculate estimated gas cost in ETH (21000 gas for simple ETH transfer)
+  // Calculate estimated gas cost in ETH
   const estimatedGasCost = gasPrice ? Number(formatGwei(gasPrice)) * 21000 / 1e9 : null;
 
   // 1. On component mount, call createPayment to get secure details
@@ -62,26 +62,25 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
     getDetails();
   }, [createPayment, buttonId, paymentId]);
 
-  // 2. When transaction is sent, update payment status to "pending"
+  // 2. When transaction is sent, update payment status
   useEffect(() => {
     if (hash) {
       updatePayment({ paymentId, txHash: hash, status: "pending" });
     }
   }, [hash, paymentId, updatePayment]);
 
-  // 3. When transaction is confirmed, update status to "confirmed" and trigger subtle confetti
+  // 3. When transaction is confirmed, trigger confetti
   const hasConfettiTriggered = useRef(false);
   useEffect(() => {
     if (isConfirmed && !hasConfettiTriggered.current) {
       hasConfettiTriggered.current = true;
       updatePayment({ paymentId, status: "confirmed" });
 
-      // Minimalistic confetti - subtle and not scammy
       confetti({
-        particleCount: 30,
-        spread: 60,
+        particleCount: 50,
+        spread: 70,
         origin: { y: 0.6 },
-        colors: ['#22c55e', '#3b82f6', '#64748b'], // green, blue, slate
+        colors: ['#2E7D32', '#3949AB', '#00897B'],
         gravity: 0.8,
         scalar: 0.9,
         disableForReducedMotion: true,
@@ -89,17 +88,14 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
     }
   }, [isConfirmed, paymentId, updatePayment]);
 
-  // Handler for the "Connect Wallet" button
   const handleConnect = () => {
     if (connectors.length > 0) {
       connect({ connector: connectors[0] });
     }
   };
 
-  // Handler for the "Pay" button
   const handlePay = () => {
     if (!details) return;
-
     sendTransaction({
       to: details.toAddress as `0x${string}`,
       value: parseEther(details.amount.toString()),
@@ -111,10 +107,15 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
   // Loading state
   if (!details && !error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-md text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto" />
-          <p className="mt-4 text-gray-500 text-sm">Loading payment details...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--md-background)] p-4">
+        <div
+          className="bg-[var(--md-surface)] rounded-3xl p-10 w-full max-w-md text-center border border-[var(--md-outline-variant)]"
+          style={{ boxShadow: 'var(--md-elevation-2)' }}
+        >
+          <div className="w-16 h-16 bg-[var(--md-primary-container)] rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--md-primary)]" />
+          </div>
+          <p className="text-[var(--md-on-surface-variant)] font-medium">Loading payment details...</p>
         </div>
       </div>
     );
@@ -123,11 +124,16 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-md text-center">
-          <AlertCircle className="w-10 h-10 text-red-400 mx-auto" />
-          <p className="mt-4 text-gray-700 font-medium">Something went wrong</p>
-          <p className="mt-2 text-gray-500 text-sm">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--md-background)] p-4">
+        <div
+          className="bg-[var(--md-surface)] rounded-3xl p-10 w-full max-w-md text-center border border-[var(--md-outline-variant)]"
+          style={{ boxShadow: 'var(--md-elevation-2)' }}
+        >
+          <div className="w-16 h-16 bg-[var(--md-error-container)] rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-8 h-8 text-[var(--md-error)]" />
+          </div>
+          <p className="text-[var(--md-on-surface)] font-semibold text-lg mb-2">Something went wrong</p>
+          <p className="text-[var(--md-on-surface-variant)]">{error}</p>
         </div>
       </div>
     );
@@ -136,19 +142,25 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
   // Success state
   if (isConfirmed) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-md text-center">
-          <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
-          <h1 className="mt-4 text-xl font-semibold text-gray-900">Payment Complete</h1>
-          <p className="mt-2 text-gray-500 text-sm">Your transaction has been confirmed.</p>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--md-background)] p-4">
+        <div
+          className="bg-[var(--md-surface)] rounded-3xl p-10 w-full max-w-md text-center border border-[var(--md-outline-variant)] animate-scale-in"
+          style={{ boxShadow: 'var(--md-elevation-3)' }}
+        >
+          <div className="w-20 h-20 bg-[var(--md-success-container)] rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="w-10 h-10 text-[var(--md-success)]" />
+          </div>
+          <h1 className="text-2xl font-bold text-[var(--md-on-surface)] mb-2">Payment Complete</h1>
+          <p className="text-[var(--md-on-surface-variant)] mb-6">Your transaction has been confirmed on the blockchain.</p>
           {hash && (
             <a
               href={`https://sepolia.basescan.org/tx/${hash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 inline-block text-sm text-blue-600 hover:text-blue-700 hover:underline"
+              className="inline-flex items-center gap-2 px-5 py-3 bg-[var(--md-surface-container)] hover:bg-[var(--md-surface-container-high)] text-[var(--md-primary)] rounded-full font-medium transition-colors border border-[var(--md-outline-variant)]"
             >
-              View on Basescan →
+              <ExternalLink className="w-4 h-4" />
+              View on Basescan
             </a>
           )}
         </div>
@@ -159,21 +171,29 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
   // Processing state
   if (isPending || isConfirming) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-md text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto" />
-          <h1 className="mt-4 text-lg font-semibold text-gray-900">
-            {isConfirming ? "Confirming transaction..." : "Waiting for approval..."}
+      <div className="min-h-screen flex items-center justify-center bg-[var(--md-background)] p-4">
+        <div
+          className="bg-[var(--md-surface)] rounded-3xl p-10 w-full max-w-md text-center border border-[var(--md-outline-variant)]"
+          style={{ boxShadow: 'var(--md-elevation-2)' }}
+        >
+          <div className="w-20 h-20 bg-[var(--md-primary-container)] rounded-full flex items-center justify-center mx-auto mb-6">
+            <Loader2 className="w-10 h-10 animate-spin text-[var(--md-primary)]" />
+          </div>
+          <h1 className="text-xl font-bold text-[var(--md-on-surface)] mb-2">
+            {isConfirming ? "Confirming Transaction..." : "Waiting for Approval"}
           </h1>
-          <p className="mt-2 text-gray-500 text-sm">
+          <p className="text-[var(--md-on-surface-variant)]">
             {isConfirming
               ? "Please wait while the network confirms your payment."
               : "Please confirm the transaction in your wallet."}
           </p>
           {hash && (
-            <p className="mt-4 text-xs text-gray-400 font-mono break-all">
-              {hash.slice(0, 10)}...{hash.slice(-8)}
-            </p>
+            <div className="mt-6 px-4 py-3 bg-[var(--md-surface-container)] rounded-xl">
+              <p className="text-xs text-[var(--md-outline)] mb-1">Transaction Hash</p>
+              <p className="text-xs text-[var(--md-on-surface-variant)] font-mono break-all">
+                {hash.slice(0, 16)}...{hash.slice(-12)}
+              </p>
+            </div>
           )}
         </div>
       </div>
@@ -182,63 +202,70 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
 
   // Main checkout state
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 w-full max-w-md overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--md-background)] p-4">
+      <div
+        className="bg-[var(--md-surface)] rounded-3xl w-full max-w-md overflow-hidden border border-[var(--md-outline-variant)]"
+        style={{ boxShadow: 'var(--md-elevation-3)' }}
+      >
         {/* Header */}
-        <div className="p-6 border-b border-gray-100">
-          <h1 className="text-lg font-semibold text-gray-900">{details!.title}</h1>
+        <div className="p-6 border-b border-[var(--md-outline-variant)] bg-[var(--md-surface-container-low)]">
+          <h1 className="text-xl font-bold text-[var(--md-on-surface)]">{details!.title}</h1>
         </div>
 
         {/* Price section */}
         <div className="p-6">
-          <div className="flex justify-between items-center py-3">
-            <span className="text-gray-600">Amount</span>
-            <span className="text-lg font-semibold text-gray-900">
-              {details!.amount} {details!.currency}
+          <div className="flex justify-between items-center py-4">
+            <span className="text-[var(--md-on-surface-variant)]">Amount</span>
+            <span className="text-2xl font-bold text-[var(--md-on-surface)]">
+              {details!.amount} <span className="text-base font-medium text-[var(--md-primary)]">{details!.currency}</span>
             </span>
           </div>
 
-          <div className="flex justify-between items-center py-3 border-t border-gray-100">
-            <span className="text-gray-600">Network fee (est.)</span>
-            <span className="text-gray-500 text-sm">
+          <div className="flex justify-between items-center py-4 border-t border-[var(--md-outline-variant)]">
+            <span className="text-[var(--md-on-surface-variant)]">Network fee (est.)</span>
+            <span className="text-[var(--md-on-surface-variant)] text-sm">
               {estimatedGasCost
                 ? `~${estimatedGasCost.toFixed(6)} ETH`
-                : "Calculating..."}
+                : <span className="md-skeleton inline-block w-20 h-4"></span>}
             </span>
           </div>
 
-          <div className="flex justify-between items-center py-3 border-t border-gray-200 mt-2">
-            <span className="font-medium text-gray-900">Total</span>
-            <span className="text-xl font-bold text-gray-900">
+          <div className="flex justify-between items-center py-4 border-t-2 border-[var(--md-outline-variant)] mt-2">
+            <span className="font-semibold text-[var(--md-on-surface)]">Total</span>
+            <span className="text-xl font-bold text-[var(--md-on-surface)]">
               ~{(details!.amount + (estimatedGasCost || 0)).toFixed(6)} {details!.currency}
             </span>
           </div>
         </div>
 
         {/* Action section */}
-        <div className="p-6 bg-gray-50 border-t border-gray-100">
+        <div className="p-6 bg-[var(--md-surface-container-low)] border-t border-[var(--md-outline-variant)]">
           {txError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg">
-              <p className="text-sm text-red-600">Transaction failed. Please try again.</p>
+            <div className="mb-4 p-4 bg-[var(--md-error-container)] rounded-xl flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-[var(--md-error)]" />
+              <p className="text-sm text-[var(--md-on-error-container)]">Transaction failed. Please try again.</p>
             </div>
           )}
 
           {!isConnected ? (
             <button
               onClick={handleConnect}
-              className="w-full flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+              className="w-full flex items-center justify-center gap-3 bg-[var(--md-primary)] hover:bg-[var(--md-primary-light)] text-white font-semibold py-4 px-6 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               <Wallet className="w-5 h-5" />
               Connect Wallet
             </button>
           ) : (
-            <div className="space-y-3">
-              <p className="text-xs text-gray-500 text-center font-mono">
-                {address?.slice(0, 6)}...{address?.slice(-4)}
-              </p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-2 py-2 px-4 bg-[var(--md-success-container)] rounded-full">
+                <div className="w-2 h-2 bg-[var(--md-success)] rounded-full animate-pulse"></div>
+                <span className="text-xs text-[var(--md-on-success-container)] font-mono">
+                  {address?.slice(0, 6)}...{address?.slice(-4)}
+                </span>
+              </div>
               <button
                 onClick={handlePay}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+                className="w-full bg-[var(--md-primary)] hover:bg-[var(--md-primary-light)] text-white font-semibold py-4 px-6 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl text-lg"
               >
                 Pay {details!.amount} {details!.currency}
               </button>
@@ -247,8 +274,9 @@ export function CheckoutFlow({ buttonId, paymentId }: { buttonId: string, paymen
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-          <p className="text-xs text-center text-gray-400">
+        <div className="px-6 py-4 bg-[var(--md-surface-container)] border-t border-[var(--md-outline-variant)]">
+          <p className="text-xs text-center text-[var(--md-outline)] flex items-center justify-center gap-2">
+            <Shield className="w-3.5 h-3.5" />
             Secure payment on Base • Powered by Instanta
           </p>
         </div>

@@ -59,37 +59,43 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
 
     if (user === undefined) {
         return (
-            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                <div className="animate-pulse space-y-4">
-                    <div className="h-6 w-32 bg-gray-200 rounded"></div>
-                    <div className="h-10 w-full bg-gray-200 rounded"></div>
+            <div
+                className="bg-[var(--md-surface)] p-6 rounded-2xl border border-[var(--md-outline-variant)]"
+                style={{ boxShadow: 'var(--md-elevation-1)' }}
+            >
+                <div className="space-y-4">
+                    <div className="h-6 w-32 md-skeleton"></div>
+                    <div className="h-12 w-full md-skeleton"></div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+        <div
+            className="bg-[var(--md-surface)] p-6 rounded-2xl border border-[var(--md-outline-variant)]"
+            style={{ boxShadow: 'var(--md-elevation-1)' }}
+        >
             <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Settings className="w-5 h-5 text-blue-600" />
+                <div className="w-12 h-12 bg-[var(--md-secondary-container)] rounded-xl flex items-center justify-center">
+                    <Settings className="w-6 h-6 text-[var(--md-secondary)]" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Profile Settings</h2>
+                <h2 className="text-xl font-semibold text-[var(--md-on-surface)]">Profile Settings</h2>
             </div>
 
             <div className="space-y-6">
                 {/* Email (Read-only) */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs font-medium text-[var(--md-on-surface-variant)] mb-2 uppercase tracking-wide">
                         Email Address
                     </label>
                     <input
                         type="email"
                         value={user.email}
                         disabled
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-gray-50 text-gray-500 cursor-not-allowed"
+                        className="w-full px-4 py-3 rounded-xl bg-[var(--md-surface-container-highest)] border border-[var(--md-outline-variant)] text-[var(--md-on-surface-variant)] cursor-not-allowed"
                     />
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1.5 text-xs text-[var(--md-outline)]">
                         Your email is managed by your authentication provider.
                     </p>
                 </div>
@@ -97,12 +103,12 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
                 {/* Wallet Address (Editable) */}
                 <form onSubmit={handleSubmit}>
                     <div>
-                        <label htmlFor="defaultWallet" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label htmlFor="defaultWallet" className="block text-xs font-medium text-[var(--md-on-surface-variant)] mb-2 uppercase tracking-wide">
                             Default Receiving Wallet
                         </label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Wallet className="h-5 w-5 text-gray-400" />
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <Wallet className="h-5 w-5 text-[var(--md-outline)]" />
                             </div>
                             <input
                                 id="defaultWallet"
@@ -114,32 +120,31 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
                                     setSuccess(false);
                                 }}
                                 placeholder="0x..."
-                                className={`w-full pl-10 pr-4 py-2 rounded-lg border ${
-                                    error
-                                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                                className={`w-full pl-12 pr-4 py-3 rounded-xl bg-[var(--md-surface-container-low)] border ${error
+                                        ? "border-[var(--md-error)] focus:ring-[var(--md-error)]"
                                         : success
-                                        ? "border-green-300 focus:ring-green-500 focus:border-green-500"
-                                        : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
-                                } focus:outline-none focus:ring-2 transition-all font-mono text-sm`}
+                                            ? "border-[var(--md-success)] focus:ring-[var(--md-success)]"
+                                            : "border-[var(--md-outline-variant)] focus:ring-[var(--md-primary)]"
+                                    } focus:outline-none focus:ring-2 focus:border-transparent transition-all font-mono text-sm text-[var(--md-on-surface)]`}
                                 required
                             />
                         </div>
-                        
+
                         {error && (
-                            <div className="mt-2 flex items-center gap-2 text-sm text-red-600">
+                            <div className="mt-3 flex items-center gap-2 text-sm text-[var(--md-error)]">
                                 <AlertCircle className="w-4 h-4" />
                                 {error}
                             </div>
                         )}
-                        
+
                         {success && (
-                            <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                            <div className="mt-3 flex items-center gap-2 text-sm text-[var(--md-success)]">
                                 <Check className="w-4 h-4" />
                                 Wallet updated successfully!
                             </div>
                         )}
-                        
-                        <p className="mt-2 text-xs text-gray-500">
+
+                        <p className="mt-2 text-xs text-[var(--md-outline)]">
                             This wallet will be used as the default destination for all new payment buttons.
                         </p>
                     </div>
@@ -147,7 +152,7 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
                     <button
                         type="submit"
                         disabled={isSubmitting || wallet === user.defaultWallet}
-                        className="mt-4 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="mt-5 w-full sm:w-auto bg-[var(--md-primary)] hover:bg-[var(--md-primary-light)] text-white font-semibold py-3 px-6 rounded-full transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? (
                             "Saving..."
@@ -163,4 +168,3 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
         </div>
     );
 }
-

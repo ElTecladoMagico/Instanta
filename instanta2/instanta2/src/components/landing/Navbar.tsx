@@ -8,49 +8,55 @@ export function Navbar() {
   const { user } = useUser();
 
   return (
-    <nav className="w-full border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+    <nav className="w-full sticky top-0 z-50 md-app-bar-transparent backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex-shrink-0 flex items-center gap-2">
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <Wallet className="h-6 w-6 text-white" />
+          <div className="flex-shrink-0 flex items-center gap-3">
+            <div className="bg-[var(--md-primary)] p-2.5 rounded-xl shadow-md">
+              <Wallet className="h-5 w-5 text-white" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-gray-900">
+            <span className="font-semibold text-xl tracking-tight text-[var(--md-on-surface)]">
               Instanta
             </span>
           </div>
 
-          {/* Navigation Links (Hidden on mobile for simplicity) */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link href="#how-it-works" className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium">
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center space-x-2">
+            <Link
+              href="#how-it-works"
+              className="px-4 py-2 rounded-full text-[var(--md-on-surface-variant)] hover:bg-[var(--md-surface-container-high)] transition-all duration-200 text-sm font-medium"
+            >
               How it Works
             </Link>
-            <Link href="#features" className="text-gray-600 hover:text-blue-600 transition-colors text-sm font-medium">
+            <Link
+              href="#features"
+              className="px-4 py-2 rounded-full text-[var(--md-on-surface-variant)] hover:bg-[var(--md-surface-container-high)] transition-all duration-200 text-sm font-medium"
+            >
               Features
             </Link>
           </div>
 
           {/* Auth Buttons */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <SignedOut>
               <SignInButton mode="modal" fallbackRedirectUrl="/auth-callback">
-                <button className="text-gray-600 hover:text-gray-900 font-medium text-sm px-4 py-2">
+                <button className="px-4 py-2 text-[var(--md-on-surface-variant)] hover:text-[var(--md-on-surface)] font-medium text-sm rounded-full hover:bg-[var(--md-surface-container-high)] transition-all duration-200">
                   Sign In
                 </button>
               </SignInButton>
               <SignInButton mode="modal" fallbackRedirectUrl="/auth-callback">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md">
+                <button className="bg-[var(--md-primary)] hover:bg-[var(--md-primary-light)] text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg">
                   Get Started
                 </button>
               </SignInButton>
             </SignedOut>
-            
+
             <SignedIn>
               {user && (
-                <Link 
+                <Link
                   href={`/dashboard/${user.id}`}
-                  className="text-gray-600 hover:text-blue-600 font-medium text-sm mr-4"
+                  className="text-[var(--md-primary)] hover:bg-[var(--md-primary-container)] font-medium text-sm px-4 py-2 rounded-full transition-all duration-200 mr-2"
                 >
                   Dashboard
                 </Link>
@@ -63,4 +69,3 @@ export function Navbar() {
     </nav>
   );
 }
-

@@ -6,15 +6,15 @@ import { Wallet } from "lucide-react";
 
 export function DashboardNavbar() {
   return (
-    <nav className="w-full border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+    <nav className="w-full sticky top-0 z-50 bg-[var(--md-surface)]/95 backdrop-blur-xl border-b border-[var(--md-outline-variant)]" style={{ boxShadow: 'var(--md-elevation-1)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <Wallet className="h-6 w-6 text-white" />
+          <Link href="/" className="flex-shrink-0 flex items-center gap-3 group">
+            <div className="bg-[var(--md-primary)] p-2.5 rounded-xl shadow-sm group-hover:shadow-md transition-shadow">
+              <Wallet className="h-5 w-5 text-white" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-gray-900">
+            <span className="font-semibold text-xl tracking-tight text-[var(--md-on-surface)]">
               Instanta
             </span>
           </Link>
