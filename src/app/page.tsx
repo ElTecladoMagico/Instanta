@@ -6,7 +6,7 @@ import { Footer } from "../components/landing/Footer";
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[var(--md-background)] selection:bg-[var(--md-primary-container)] selection:text-[var(--md-on-primary-container)]">
+    <main className="min-h-screen bg-background selection:bg-primary-container selection:text-on-primary-container">
       <Navbar />
       <Hero />
       <HowItWorks />
@@ -15,4 +15,3 @@ export default function LandingPage() {
     </main>
   );
 }
-

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:all": "concurrently -n next,convex -c blue,magenta \"npm run dev\" \"npx convex dev\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -27,6 +28,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "^1.0.0",
+    "concurrently": "^9.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "tailwindcss": "^4",

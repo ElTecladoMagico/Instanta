@@ -2,44 +2,67 @@ import { Wallet } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-[var(--md-surface-container-low)] border-t border-[var(--md-outline-variant)]">
+    <footer className="bg-surface-container-low border-t border-outline-variant">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
 
           {/* Brand */}
-          <div className="flex items-center gap-3">
-            <div className="bg-[var(--md-primary)] p-2 rounded-xl shadow-sm">
-              <Wallet className="h-5 w-5 text-white" />
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-primary p-2 rounded-xl shadow-sm">
+                <Wallet className="h-5 w-5 text-white" />
+              </div>
+              <span className="font-semibold text-lg text-on-surface">Instanta</span>
             </div>
-            <span className="font-semibold text-lg text-[var(--md-on-surface)]">Instanta</span>
+            <p className="text-sm text-on-surface-variant leading-relaxed max-w-xs">
+              The simplest way to accept crypto payments on your website. Non-custodial, instant, and secure.
+            </p>
           </div>
 
-          {/* Links */}
-          <div className="flex gap-6 text-sm text-[var(--md-on-surface-variant)]">
-            <a
-              href="#"
-              className="hover:text-[var(--md-primary)] transition-colors px-3 py-2 rounded-full hover:bg-[var(--md-primary-container)]"
-            >
-              Privacy Policy
-            </a>
-            <a
-              href="#"
-              className="hover:text-[var(--md-primary)] transition-colors px-3 py-2 rounded-full hover:bg-[var(--md-primary-container)]"
-            >
-              Terms of Service
-            </a>
-            <a
-              href="#"
-              className="hover:text-[var(--md-primary)] transition-colors px-3 py-2 rounded-full hover:bg-[var(--md-primary-container)]"
-            >
-              Contact Support
-            </a>
+          {/* Product */}
+          <div>
+            <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wide mb-4">Product</h3>
+            <ul className="space-y-2 text-sm text-on-surface-variant">
+              <li>
+                <a href="#how-it-works" className="hover:text-primary transition-colors">How it Works</a>
+              </li>
+              <li>
+                <a href="#features" className="hover:text-primary transition-colors">Features</a>
+              </li>
+            </ul>
           </div>
 
-          {/* Copyright */}
-          <div className="text-sm text-[var(--md-outline)]">
-            &copy; {new Date().getFullYear()} Instanta. All rights reserved.
+          {/* Built with */}
+          <div>
+            <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wide mb-4">Built with</h3>
+            <ul className="space-y-2 text-sm text-on-surface-variant">
+              <li>
+                <a href="https://base.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  Base Network
+                </a>
+              </li>
+              <li>
+                <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  Next.js
+                </a>
+              </li>
+              <li>
+                <a href="https://convex.dev" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  Convex
+                </a>
+              </li>
+            </ul>
           </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="mt-10 pt-6 border-t border-outline-variant flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-outline">
+            &copy; {new Date().getFullYear()} Instanta. TFG by Pedro Gabriel Mantese Masegosa.
+          </p>
+          <p className="text-xs text-outline">
+            Built on Base Sepolia (testnet)
+          </p>
         </div>
       </div>
     </footer>
