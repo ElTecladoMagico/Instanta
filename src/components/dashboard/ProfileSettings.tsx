@@ -91,7 +91,7 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
                     </label>
                     <input
                         type="email"
-                        value={user.email}
+                        value={user?.email ?? ""}
                         disabled
                         className="w-full px-4 py-3 rounded-xl bg-[var(--md-surface-container-highest)] border border-[var(--md-outline-variant)] text-[var(--md-on-surface-variant)] cursor-not-allowed"
                     />
@@ -151,7 +151,7 @@ export function ProfileSettings({ userId }: ProfileSettingsProps) {
 
                     <button
                         type="submit"
-                        disabled={isSubmitting || wallet === user.defaultWallet}
+                        disabled={isSubmitting || wallet === user?.defaultWallet}
                         className="mt-5 w-full sm:w-auto bg-[var(--md-primary)] hover:bg-[var(--md-primary-light)] text-white font-semibold py-3 px-6 rounded-full transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? (

@@ -30,7 +30,7 @@ export function HowItWorks() {
             As Simple as Copy & Paste
           </h2>
           <p className="text-lg text-[var(--md-on-surface-variant)] max-w-2xl mx-auto">
-            You don't need to be a developer to accept crypto. We've handled the complexity so you don't have to.
+            You don&apos;t need to be a developer to accept crypto. We&apos;ve handled the complexity so you don&apos;t have to.
           </p>
         </div>
 
@@ -72,11 +72,11 @@ export function HowItWorks() {
           <div className="p-6 overflow-x-auto bg-[#1C1B1F]">
             <pre className="text-sm font-mono text-gray-300">
               <code>
-                <span className="text-[#82AAFF]">&lt;script</span> <span className="text-[#C792EA]">src</span>=<span className="text-[#C3E88D]">"https://instanta.app/button.js"</span><span className="text-[#82AAFF]">&gt;&lt;/script&gt;</span>
+                <span className="text-[#82AAFF]">&lt;script</span> <span className="text-[#C792EA]">src</span>=<span className="text-[#C3E88D]">{'"https://instanta.app/button.js"'}</span><span className="text-[#82AAFF]">&gt;&lt;/script&gt;</span>
                 {'\n\n'}
                 <span className="text-gray-500">{`<!-- Your Secure Payment Button -->`}</span>
                 {'\n'}
-                <span className="text-[#82AAFF]">&lt;button</span> <span className="text-[#C792EA]">data-instanta-button-id</span>=<span className="text-[#C3E88D]">"btn_8x92..."</span><span className="text-[#82AAFF]">&gt;</span>
+                <span className="text-[#82AAFF]">&lt;button</span> <span className="text-[#C792EA]">data-instanta-button-id</span>=<span className="text-[#C3E88D]">{'"btn_8x92..."'}</span><span className="text-[#82AAFF]">&gt;</span>
                 {'\n  '}Pay Now
                 {'\n'}
                 <span className="text-[#82AAFF]">&lt;/button&gt;</span>

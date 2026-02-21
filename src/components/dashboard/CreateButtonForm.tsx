@@ -183,7 +183,7 @@ export function CreateButtonForm({ userId, defaultWallet }: CreateButtonFormProp
                                 </button>
                             </div>
                             <p className="text-xs text-[var(--md-on-success-container)]/70 mt-2">
-                                Copy and paste this code into your website's HTML.
+                                Copy and paste this code into your website&apos;s HTML.
                             </p>
                         </div>
                     </div>
