@@ -63,6 +63,10 @@
   /* Outline */
   --md-outline: #79747E;
   --md-outline-variant: #CAC4D0;
+
+  /* Code blocks (dark surfaces) */
+  --md-code-surface: #1C1B1F;
+  --md-code-surface-variant: #2D2D2D;
   
   /* Elevation shadows (Material Design spec) */
   --md-elevation-1: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
@@ -99,35 +103,72 @@ html {
   --color-foreground: var(--md-on-background);
   --font-sans: var(--md-font-family);
   --font-mono: var(--md-font-mono);
-  
-  /* Material colors */
+
+  /* Primary */
   --color-primary: var(--md-primary);
   --color-primary-light: var(--md-primary-light);
   --color-primary-dark: var(--md-primary-dark);
   --color-primary-container: var(--md-primary-container);
   --color-on-primary: var(--md-on-primary);
-  
+  --color-on-primary-container: var(--md-on-primary-container);
+
+  /* Secondary */
   --color-secondary: var(--md-secondary);
   --color-secondary-light: var(--md-secondary-light);
+  --color-secondary-dark: var(--md-secondary-dark);
   --color-secondary-container: var(--md-secondary-container);
-  
+  --color-on-secondary: var(--md-on-secondary);
+  --color-on-secondary-container: var(--md-on-secondary-container);
+
+  /* Tertiary */
   --color-tertiary: var(--md-tertiary);
   --color-tertiary-light: var(--md-tertiary-light);
+  --color-tertiary-dark: var(--md-tertiary-dark);
   --color-tertiary-container: var(--md-tertiary-container);
-  
-  --color-surface: var(--md-surface);
-  --color-surface-dim: var(--md-surface-dim);
-  --color-surface-container: var(--md-surface-container);
-  --color-surface-container-high: var(--md-surface-container-high);
-  
+  --color-on-tertiary: var(--md-on-tertiary);
+  --color-on-tertiary-container: var(--md-on-tertiary-container);
+
+  /* Error */
   --color-error: var(--md-error);
   --color-error-container: var(--md-error-container);
-  
+  --color-on-error: var(--md-on-error);
+  --color-on-error-container: var(--md-on-error-container);
+
+  /* Success */
   --color-success: var(--md-success);
   --color-success-container: var(--md-success-container);
-  
+  --color-on-success: var(--md-on-success);
+  --color-on-success-container: var(--md-on-success-container);
+
+  /* Surfaces */
+  --color-surface: var(--md-surface);
+  --color-surface-dim: var(--md-surface-dim);
+  --color-surface-bright: var(--md-surface-bright);
+  --color-surface-variant: var(--md-surface-variant);
+  --color-surface-container-lowest: var(--md-surface-container-lowest);
+  --color-surface-container-low: var(--md-surface-container-low);
+  --color-surface-container: var(--md-surface-container);
+  --color-surface-container-high: var(--md-surface-container-high);
+  --color-surface-container-highest: var(--md-surface-container-highest);
+
+  /* On-surface */
+  --color-on-surface: var(--md-on-surface);
+  --color-on-surface-variant: var(--md-on-surface-variant);
+
+  /* Outline */
   --color-outline: var(--md-outline);
   --color-outline-variant: var(--md-outline-variant);
+
+  /* Elevation shadows */
+  --shadow-elevation-1: var(--md-elevation-1);
+  --shadow-elevation-2: var(--md-elevation-2);
+  --shadow-elevation-3: var(--md-elevation-3);
+  --shadow-elevation-4: var(--md-elevation-4);
+  --shadow-elevation-5: var(--md-elevation-5);
+
+  /* Code block surface (dark) */
+  --color-code-surface: var(--md-code-surface);
+  --color-code-surface-variant: var(--md-code-surface-variant);
 }
 
 body {
@@ -139,267 +180,8 @@ body {
 }
 
 /* ============================================
-   Material Design Component Classes
+   Animations
    ============================================ */
-
-/* Elevated card styles */
-.md-card {
-  background: var(--md-surface);
-  border-radius: var(--md-radius-lg);
-  box-shadow: var(--md-elevation-1);
-  transition: box-shadow 0.2s var(--md-motion-standard),
-              transform 0.2s var(--md-motion-standard);
-}
-
-.md-card:hover {
-  box-shadow: var(--md-elevation-2);
-}
-
-.md-card-elevated {
-  background: var(--md-surface);
-  border-radius: var(--md-radius-lg);
-  box-shadow: var(--md-elevation-2);
-}
-
-.md-card-elevated:hover {
-  box-shadow: var(--md-elevation-4);
-  transform: translateY(-2px);
-}
-
-/* Outlined card */
-.md-card-outlined {
-  background: var(--md-surface);
-  border-radius: var(--md-radius-lg);
-  border: 1px solid var(--md-outline-variant);
-}
-
-/* Filled card */
-.md-card-filled {
-  background: var(--md-surface-container);
-  border-radius: var(--md-radius-lg);
-}
-
-/* Material Buttons */
-.md-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-weight: 500;
-  font-size: 0.875rem;
-  letter-spacing: 0.01em;
-  padding: 10px 24px;
-  border-radius: var(--md-radius-full);
-  transition: all 0.2s var(--md-motion-standard);
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  outline: none;
-  border: none;
-}
-
-.md-btn-filled {
-  background: var(--md-primary);
-  color: var(--md-on-primary);
-  box-shadow: var(--md-elevation-1);
-}
-
-.md-btn-filled:hover {
-  box-shadow: var(--md-elevation-2);
-  background: var(--md-primary-light);
-}
-
-.md-btn-filled:active {
-  box-shadow: var(--md-elevation-1);
-}
-
-.md-btn-filled-tonal {
-  background: var(--md-secondary-container);
-  color: var(--md-on-secondary-container);
-}
-
-.md-btn-filled-tonal:hover {
-  background: var(--md-secondary-light);
-  color: var(--md-on-secondary);
-}
-
-.md-btn-outlined {
-  background: transparent;
-  color: var(--md-primary);
-  border: 1px solid var(--md-outline);
-}
-
-.md-btn-outlined:hover {
-  background: var(--md-primary-container);
-}
-
-.md-btn-text {
-  background: transparent;
-  color: var(--md-primary);
-}
-
-.md-btn-text:hover {
-  background: var(--md-primary-container);
-}
-
-/* FAB (Floating Action Button) */
-.md-fab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--md-radius-lg);
-  background: var(--md-primary-container);
-  color: var(--md-on-primary-container);
-  box-shadow: var(--md-elevation-3);
-  transition: all 0.2s var(--md-motion-standard);
-  cursor: pointer;
-  border: none;
-}
-
-.md-fab:hover {
-  box-shadow: var(--md-elevation-4);
-  transform: scale(1.05);
-}
-
-/* Material Input fields */
-.md-input {
-  width: 100%;
-  padding: 16px;
-  font-size: 1rem;
-  background: var(--md-surface-container-low);
-  border: 1px solid var(--md-outline-variant);
-  border-radius: var(--md-radius-sm);
-  color: var(--md-on-surface);
-  transition: all 0.2s var(--md-motion-standard);
-}
-
-.md-input:hover {
-  border-color: var(--md-outline);
-}
-
-.md-input:focus {
-  outline: none;
-  border-color: var(--md-primary);
-  box-shadow: 0 0 0 2px var(--md-primary-container);
-  background: var(--md-surface);
-}
-
-.md-input::placeholder {
-  color: var(--md-on-surface-variant);
-}
-
-/* Filled text field variant */
-.md-input-filled {
-  border: none;
-  border-bottom: 2px solid var(--md-outline-variant);
-  border-radius: var(--md-radius-xs) var(--md-radius-xs) 0 0;
-  background: var(--md-surface-container-highest);
-}
-
-.md-input-filled:focus {
-  border-bottom-color: var(--md-primary);
-  box-shadow: none;
-}
-
-/* Material label */
-.md-label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--md-on-surface-variant);
-  margin-bottom: 8px;
-}
-
-/* Chips */
-.md-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: var(--md-radius-sm);
-  background: var(--md-surface-container);
-  color: var(--md-on-surface);
-  border: 1px solid var(--md-outline-variant);
-  transition: all 0.15s var(--md-motion-standard);
-}
-
-.md-chip:hover {
-  background: var(--md-surface-container-high);
-}
-
-.md-chip-selected {
-  background: var(--md-secondary-container);
-  color: var(--md-on-secondary-container);
-  border-color: transparent;
-}
-
-/* Divider */
-.md-divider {
-  height: 1px;
-  background: var(--md-outline-variant);
-}
-
-/* ============================================
-   Material Animations
-   ============================================ */
-
-/* Ripple effect base */
-.md-ripple {
-  position: relative;
-  overflow: hidden;
-}
-
-.md-ripple::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle, var(--md-primary) 10%, transparent 10.01%);
-  background-repeat: no-repeat;
-  background-position: 50%;
-  transform: scale(10, 10);
-  opacity: 0;
-  transition: transform 0.5s, opacity 0.5s;
-}
-
-.md-ripple:active::after {
-  transform: scale(0, 0);
-  opacity: 0.3;
-  transition: 0s;
-}
-
-/* State layer - Material Design hover states */
-.md-state-layer {
-  position: relative;
-}
-
-.md-state-layer::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: currentColor;
-  opacity: 0;
-  transition: opacity 0.2s var(--md-motion-standard);
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-.md-state-layer:hover::before {
-  opacity: 0.08;
-}
-
-.md-state-layer:focus-visible::before {
-  opacity: 0.12;
-}
-
-.md-state-layer:active::before {
-  opacity: 0.12;
-}
 
 /* Animated blob background */
 @keyframes blob {

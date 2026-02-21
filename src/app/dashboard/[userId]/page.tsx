@@ -31,7 +31,6 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
         }
     }, [isLoaded, isSignedIn, user, userId, router]);
 
-    // Auto-create user in Convex when they sign in for the first time
     useEffect(() => {
         if (userInDb === null && user && !creatingRef.current) {
             creatingRef.current = true;
@@ -44,10 +43,9 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
         }
     }, [userInDb, user, createUser]);
 
-    // Loading state
     if (!isLoaded || userInDb === undefined || userInDb === null) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[var(--md-background)]">
+            <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 md-skeleton rounded-xl"></div>
                     <div className="h-4 w-32 md-skeleton"></div>
@@ -56,41 +54,37 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
         );
     }
 
-    // Onboarding
     if (!userInDb.defaultWallet) {
         return <Onboarding userId={userInDb._id} />;
     }
 
     return (
-        <div className="min-h-screen bg-[var(--md-background)]">
+        <div className="min-h-screen bg-background">
             <DashboardNavbar />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 <div className="mb-10">
-                    <h1 className="text-3xl font-bold text-[var(--md-on-surface)]">Dashboard</h1>
-                    <p className="text-[var(--md-on-surface-variant)] mt-2">Manage your payment buttons and settings.</p>
+                    <h1 className="text-3xl font-bold text-on-surface">Dashboard</h1>
+                    <p className="text-on-surface-variant mt-2">Manage your payment buttons and settings.</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Create Button */}
                     <div className="lg:col-span-1 space-y-8">
                         <div>
-                            <h2 className="text-lg font-semibold text-[var(--md-on-surface)] mb-4 flex items-center gap-2">
-                                <span className="w-1.5 h-6 bg-[var(--md-primary)] rounded-full"></span>
+                            <h2 className="text-lg font-semibold text-on-surface mb-4 flex items-center gap-2">
+                                <span className="w-1.5 h-6 bg-primary rounded-full"></span>
                                 Create New Button
                             </h2>
                             <CreateButtonForm userId={userInDb._id} defaultWallet={userInDb.defaultWallet} />
                         </div>
 
-                        {/* Profile Settings */}
                         <div>
                             <ProfileSettings userId={userInDb._id} />
                         </div>
                     </div>
 
-                    {/* Right Column: My Buttons */}
                     <div className="lg:col-span-2">
-                        <h2 className="text-lg font-semibold text-[var(--md-on-surface)] mb-4 flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-[var(--md-secondary)] rounded-full"></span>
+                        <h2 className="text-lg font-semibold text-on-surface mb-4 flex items-center gap-2">
+                            <span className="w-1.5 h-6 bg-secondary rounded-full"></span>
                             My Buttons
                         </h2>
                         <ButtonList userId={userInDb._id} />
