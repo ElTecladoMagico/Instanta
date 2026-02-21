@@ -1,10 +1,10 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useEffect, use } from "react";
+import { useEffect, useRef, use } from "react";
 import { Onboarding } from "../../../components/dashboard/Onboarding";
 import { CreateButtonForm } from "../../../components/dashboard/CreateButtonForm";
 import { ButtonList } from "../../../components/dashboard/ButtonList";
@@ -15,6 +15,8 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
     const { userId } = use(params);
     const { user, isLoaded, isSignedIn } = useUser();
     const router = useRouter();
+    const createUser = useMutation(api.payments.createUser);
+    const creatingRef = useRef(false);
 
     const userInDb = useQuery(api.payments.getUserByUserId, user ? { userId: user.id } : "skip");
 
@@ -29,27 +31,26 @@ export default function DashboardPage({ params }: { params: Promise<{ userId: st
         }
     }, [isLoaded, isSignedIn, user, userId, router]);
 
+    // Auto-create user in Convex when they sign in for the first time
+    useEffect(() => {
+        if (userInDb === null && user && !creatingRef.current) {
+            creatingRef.current = true;
+            createUser({
+                userId: user.id,
+                email: user.primaryEmailAddress?.emailAddress ?? "",
+            }).catch(() => {
+                creatingRef.current = false;
+            });
+        }
+    }, [userInDb, user, createUser]);
+
     // Loading state
-    if (!isLoaded || userInDb === undefined) {
+    if (!isLoaded || userInDb === undefined || userInDb === null) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[var(--md-background)]">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 md-skeleton rounded-xl"></div>
                     <div className="h-4 w-32 md-skeleton"></div>
-                </div>
-            </div>
-        );
-    }
-
-    // User not in DB yet
-    if (userInDb === null) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[var(--md-background)]">
-                <div className="text-center">
-                    <div className="w-16 h-16 bg-[var(--md-primary-container)] rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse-soft">
-                        <div className="w-8 h-8 bg-[var(--md-primary)]/30 rounded-lg"></div>
-                    </div>
-                    <p className="text-[var(--md-on-surface-variant)]">Initializing your account...</p>
                 </div>
             </div>
         );
