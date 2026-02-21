@@ -51,9 +51,11 @@ export function CreateButtonForm({ userId, defaultWallet }: CreateButtonFormProp
         }
     };
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+
     const copyCode = () => {
         if (!createdButtonId) return;
-        const code = `<script src="http://localhost:3000/button.js"></script>\n<button data-instanta-button-id="${createdButtonId}">\n  Pay Now\n</button>`;
+        const code = `<script src="${appUrl}/button.js"></script>\n<button data-instanta-button-id="${createdButtonId}">\n  Pay Now\n</button>`;
         navigator.clipboard.writeText(code);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
@@ -162,7 +164,7 @@ export function CreateButtonForm({ userId, defaultWallet }: CreateButtonFormProp
                             <div className="mt-2 relative group">
                                 <pre className="text-xs font-mono bg-code-surface text-gray-300 p-4 rounded-xl overflow-x-auto">
                                     <code>
-                                        {`<script src="http://localhost:3000/button.js"></script>\n<button data-instanta-button-id="${createdButtonId}">\n  Pay Now\n</button>`}
+                                        {`<script src="${appUrl}/button.js"></script>\n<button data-instanta-button-id="${createdButtonId}">\n  Pay Now\n</button>`}
                                     </code>
                                 </pre>
                                 <button
