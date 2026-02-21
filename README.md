@@ -43,20 +43,20 @@ npm install
 cp .env.example .env.local
 # Edit .env.local with your Convex, Clerk, and Alchemy credentials
 
-# 4. Start Convex development server (in a separate terminal)
-npx convex dev
-
-# 5. Start the Next.js development server
-npm run dev
+# 4. Start everything with a single command
+npm run dev:all
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the landing page.
+This runs Next.js and the Convex dev watcher together in one terminal. Open [http://localhost:3000](http://localhost:3000) to see the landing page.
+
+> **Tip:** If you need to run them separately for any reason, use `npm run dev` and `npx convex dev` in two terminals.
 
 ## Available Scripts
 
 | Script | Description |
 |--------|-------------|
-| `npm run dev` | Start the Next.js development server |
+| `npm run dev:all` | Start Next.js + Convex dev watcher in a single terminal |
+| `npm run dev` | Start only the Next.js development server |
 | `npm run build` | Create a production build |
 | `npm run start` | Serve the production build |
 | `npm run lint` | Run ESLint |
@@ -108,6 +108,7 @@ Detailed project documentation is available in the `docs/` directory:
 - [`Plan_estrategico.md`](docs/Plan_estrategico.md) — Strategic plan, competitive analysis, and product vision
 - [`project_memo.md`](docs/project_memo.md) — Phase 1 development: architecture, security fix, and core payment flow
 - [`project_memo_2.md`](docs/project_memo_2.md) — Phase 2 development: landing page, dashboard, and user experience
+- [`decisions/001-dev-workflow-no-docker.md`](docs/decisions/001-dev-workflow-no-docker.md) — ADR: why concurrently instead of Docker for dev workflow
 
 ## License
 
