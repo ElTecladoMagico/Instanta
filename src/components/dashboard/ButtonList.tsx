@@ -13,9 +13,10 @@ interface ButtonListProps {
 export function ButtonList({ userId }: ButtonListProps) {
     const buttons = useQuery(api.payments.getUserButtons, { userId });
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
     const copyCode = (buttonId: string) => {
-        const code = `<script src="http://localhost:3000/button.js"></script>\n<button data-instanta-button-id="${buttonId}">\n  Pay Now\n</button>`;
+        const code = `<script src="${appUrl}/button.js"></script>\n<button data-instanta-button-id="${buttonId}">\n  Pay Now\n</button>`;
         navigator.clipboard.writeText(code);
         setCopiedId(buttonId);
         setTimeout(() => setCopiedId(null), 2000);

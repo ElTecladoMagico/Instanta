@@ -1,21 +1,19 @@
 (function() {
-    // Configuration
-    const WIDGET_URL = 'http://localhost:3000/widget';
+    // Derive the widget URL from wherever this script was loaded from.
+    // e.g. if loaded from https://instanta.vercel.app/button.js → widget is https://instanta.vercel.app/widget
+    const scriptSrc = document.currentScript && document.currentScript.src;
+    const WIDGET_URL = scriptSrc
+      ? new URL('/widget', scriptSrc).href
+      : '/widget';
     
-    // This function finds all payment buttons on the page
     function initializePayButtons() {
-      // Look for all elements that have our new, secure attribute
       const payButtons = document.querySelectorAll('[data-instanta-button-id]');
       
-      console.log(`[Instanta] Found ${payButtons.length} payment buttons`);
-      
       payButtons.forEach(button => {
-        // Read the secure button ID from its attribute
         const buttonId = button.getAttribute('data-instanta-button-id');
         
-        // Validate that we have the button ID
         if (!buttonId) {
-          console.error('[Instanta] Button is missing the data-instanta-button-id attribute:', button);
+          console.error('[Instanta] Button is missing the data-instanta-button-id attribute.');
           return;
         }
         
@@ -50,15 +48,12 @@
         });
         /*************************** Basic Button Styles ***************************/
 
-        console.log(`[Instanta] Initialized button with ID: ${buttonId}`);
       });
     }
     
     /*************************** iFrame Widget with Styles ***************************/
     // This function opens the payment modal
     function openPaymentModal(buttonId) {
-      console.log('[Instanta] Opening payment modal for button:', buttonId);
-      
       // Generate a unique payment ID for this payment attempt
       const paymentId = 'pay_' + Math.random().toString(36).slice(2, 11);
       
@@ -165,13 +160,10 @@
       initializePayButtons();
     }
     
-    // Hacer algunas funciones disponibles globalmente por si acaso
     window.Instanta = {
       init: initializePayButtons,
       openModal: openPaymentModal,
       closeModal: closePaymentModal
     };
     /*************************** Modal Initialization ***************************/
-
-    console.log('[Instanta] Script loaded successfully ✓');
 })();

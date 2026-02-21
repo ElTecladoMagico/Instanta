@@ -109,7 +109,7 @@
 
         <!-- 
             IMPORTANT: Replace the button ID below with a real button ID from your dashboard.
-            1. Go to http://localhost:3000/dashboard/[your-user-id]
+            1. Go to your dashboard (e.g. http://localhost:3000/dashboard/[your-user-id])
             2. Create a new button
             3. Copy the button ID and paste it below
         -->
@@ -131,7 +131,8 @@
     </div>
 
     <!-- Instanta Payment Button Script -->
-    <script src="http://localhost:3000/button.js"></script>
+    <!-- In development, serve this file and button.js from the same origin (e.g. http://localhost:3000) -->
+    <script src="/button.js"></script>
 </body>
 
 </html>

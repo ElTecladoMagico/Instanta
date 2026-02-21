@@ -18,8 +18,22 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Instanta",
-  description: "The simplest and fastest way to accept crypto payments",
+  title: "Instanta — Crypto Payments in 60 Seconds",
+  description:
+    "Accept crypto payments on your website with 3 lines of code. No registration, no fees, non-custodial. Powered by Base.",
+  openGraph: {
+    title: "Instanta — Crypto Payments in 60 Seconds",
+    description:
+      "Accept crypto payments on your website with 3 lines of code. No registration, no fees, non-custodial.",
+    siteName: "Instanta",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Instanta — Crypto Payments in 60 Seconds",
+    description:
+      "Accept crypto payments on your website with 3 lines of code. No registration, no fees, non-custodial.",
+  },
 };
 
 export default function RootLayout({
