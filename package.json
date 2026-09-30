@@ -9,8 +9,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "migrate": "node scripts/migrate.ts",
-    "test": "node --test \"test/**/*.test.ts\""
+    "db:migrate": "uv run -q --python 3.13 --with-requirements db/requirements.txt alembic -c db/alembic.ini upgrade head",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "test:db": "uv run -q --python 3.13 --with-requirements db/requirements-dev.txt pytest -q db/tests"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.35.1",

@@ -22,7 +22,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - uses: astral-sh/setup-uv@v6
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm run lint
+      - run: npm run test:db   # migraciones de Alembic: upgrade, repetición y downgrade (deja la BD en head)
       - run: npm test

@@ -15,6 +15,7 @@
 | [011](011-tests-y-ci.md) | Tests con `node:test` y CI en GitHub Actions | Aceptada |
 | [012](012-alcance-del-producto.md) | Alcance del producto y trabajo futuro | Propuesta |
 | [013](013-eth-nativo-en-testnet.md) | Admitir ETH nativo además de USDC (pruebas en testnet) | Propuesta |
+| [014](014-migraciones-con-alembic.md) | Migraciones con Alembic (SQL a mano) en vez del script propio | Aceptada |
 
 ## Orden de implementación
 
