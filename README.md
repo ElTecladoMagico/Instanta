@@ -105,9 +105,9 @@ Instanta follows a **non-custodial** model — funds flow directly from the buye
 
 Detailed project documentation is available in the `docs/` directory:
 
-- [`Plan_estrategico.md`](docs/Plan_estrategico.md) — Strategic plan, competitive analysis, and product vision
-- [`project_memo.md`](docs/project_memo.md) — Phase 1 development: architecture, security fix, and core payment flow
-- [`project_memo_2.md`](docs/project_memo_2.md) — Phase 2 development: landing page, dashboard, and user experience
+- [`Plan_estrategico.md`](docs/archive/Plan_estrategico.md) — Strategic plan, competitive analysis, and product vision
+- [`project_memo.md`](docs/archive/project_memo.md) — Phase 1 development: architecture, security fix, and core payment flow
+- [`project_memo_2.md`](docs/archive/project_memo_2.md) — Phase 2 development: landing page, dashboard, and user experience
 - [`decisions/001-dev-workflow-no-docker.md`](docs/decisions/001-dev-workflow-no-docker.md) — ADR: why concurrently instead of Docker for dev workflow
 
 ## License
