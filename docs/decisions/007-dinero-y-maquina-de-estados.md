@@ -1,7 +1,7 @@
 # ADR-007: Representación del dinero y máquina de estados del pago
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Propuesta  
+**Estado:** Propuesta — importes a `NUMERIC(78,0)` por [ADR-013](013-eth-nativo-en-testnet.md)  
 **Contexto:** El prototipo guarda importes como `number` y los estados se pueden cambiar sin reglas
 
 ---

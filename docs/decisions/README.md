@@ -14,6 +14,7 @@
 | [010](010-checkout-y-boton-embebible.md) | Checkout alojado único; el botón crea un PaymentIntent | Propuesta |
 | [011](011-tests-y-ci.md) | Tests con `node:test` y CI en GitHub Actions | Propuesta |
 | [012](012-alcance-del-producto.md) | Alcance del producto y trabajo futuro | Propuesta |
+| [013](013-eth-nativo-en-testnet.md) | Admitir ETH nativo además de USDC (pruebas en testnet) | Propuesta |
 
 ## Orden de implementación
 

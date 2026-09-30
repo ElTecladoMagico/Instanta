@@ -9,7 +9,8 @@ info:
 
     **Convenciones** (ADR-005):
     - Autenticación con `Authorization: Bearer sk_test_...` (ADR-006).
-    - Importes como string con un entero en unidades mínimas: `"10000000"` = 10 USDC (ADR-007).
+    - Importes como string con un entero en unidades mínimas: `"10000000"` = 10 USDC (6 decimales),
+      `"1000000000000000"` = 0,001 ETH (18 decimales) (ADR-007, ADR-013).
     - Fechas como segundos Unix.
     - Ids con prefijo y 128 bits aleatorios en hexadecimal: `pi_` (pago), `evt_` (evento), `we_` (webhook), `pl_` (payment link).
     - Toda respuesta lleva la cabecera `Request-Id`.
@@ -447,12 +448,13 @@ components:
   schemas:
     Amount:
       type: string
-      pattern: "^[1-9][0-9]{0,17}$"
-      description: Entero positivo en unidades mínimas del token (USDC tiene 6 decimales).
+      pattern: "^[1-9][0-9]{0,77}$"
+      description: "Entero positivo en unidades mínimas (USDC, 6 decimales; ETH, 18 decimales: wei)."
       example: "10000000"
     Currency:
       type: string
-      enum: [usdc]
+      enum: [usdc, eth]
+      description: "`eth` es ETH nativo; útil sobre todo para pruebas en testnet (ADR-013)."
     Metadata:
       type: object
       maxProperties: 20
@@ -482,7 +484,7 @@ components:
         amount: { $ref: "#/components/schemas/Amount" }
         amount_received:
           type: string
-          pattern: "^[0-9]{1,19}$"
+          pattern: "^[0-9]{1,78}$"
           description: Lo recibido según la cadena. Puede superar `amount` si el comprador paga de más.
         currency: { $ref: "#/components/schemas/Currency" }
         status: { $ref: "#/components/schemas/PaymentIntentStatus" }
@@ -490,7 +492,9 @@ components:
           oneOf: [{ $ref: "#/components/schemas/FailureCode" }, { type: "null" }]
         pay_to: { $ref: "#/components/schemas/Address" }
         chain_id: { type: integer, enum: [84532, 8453] }
-        token_address: { $ref: "#/components/schemas/Address" }
+        token_address:
+          oneOf: [{ $ref: "#/components/schemas/Address" }, { type: "null" }]
+          description: Contrato del token; `null` si la moneda es `eth`.
         tx_hash:
           oneOf: [{ $ref: "#/components/schemas/TxHash" }, { type: "null" }]
         client_secret: { type: string }
@@ -536,7 +540,9 @@ components:
           oneOf: [{ $ref: "#/components/schemas/FailureCode" }, { type: "null" }]
         pay_to: { $ref: "#/components/schemas/Address" }
         chain_id: { type: integer }
-        token_address: { $ref: "#/components/schemas/Address" }
+        token_address:
+          oneOf: [{ $ref: "#/components/schemas/Address" }, { type: "null" }]
+          description: Contrato del token; `null` si la moneda es `eth`.
         merchant_name: { type: string }
         description: { type: [string, "null"] }
         tx_hash:
