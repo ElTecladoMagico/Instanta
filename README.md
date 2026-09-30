@@ -84,7 +84,7 @@ This runs Next.js and the Convex dev watcher together in one terminal. Open [htt
 │   └── usdc/                   # USDC contract address and ABI (Base Sepolia)
 ├── public/
 │   ├── button.js               # Embeddable payment button script
-│   └── test-button.html        # Test page for the payment widget
+│   (test page moved to test/manual/test-button.html)
 ├── docs/                       # Project documentation and memos
 ├── .env.example                # Required environment variables
 └── package.json
