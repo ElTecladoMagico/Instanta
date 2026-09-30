@@ -1,15 +1,7 @@
+// Necesita la base de datos migrada:  npm run db:migrate
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { readdirSync } from "node:fs";
 import { sql } from "../lib/db.ts";
-
-test("las migraciones se aplican una vez y repetirlas no hace nada", async () => {
-  execFileSync("node", ["scripts/migrate.ts"]);
-  execFileSync("node", ["scripts/migrate.ts"]);
-  const [{ count }] = await sql<{ count: number }[]>`SELECT count(*)::int AS count FROM schema_migrations`;
-  assert.equal(count, readdirSync("db/migrations").filter((f) => f.endsWith(".sql")).length);
-});
 
 test("un tx_hash en mayúsculas no puede esquivar el UNIQUE (ADR-004, T2)", async () => {
   await sql`INSERT INTO merchants (id, clerk_user_id, email) VALUES ('mer_t2', 'user_t2', 't2@example.com') ON CONFLICT DO NOTHING`;

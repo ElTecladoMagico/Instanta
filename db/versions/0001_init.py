@@ -1,3 +1,18 @@
+"""Esquema inicial: comercios, claves, enlaces de pago, pagos, webhooks y eventos.
+
+ADR-002, 006, 007, 009, 010 y 013. SQL escrito a mano; Alembic solo lleva el control de versiones.
+"""
+
+from alembic import op
+
+revision = "0001"
+down_revision = None
+branch_labels = None
+depends_on = None
+
+
+def upgrade() -> None:
+    op.execute("""
 -- Esquema inicial (ADR-002, ADR-006, ADR-007, ADR-009, ADR-010, ADR-013).
 -- Importes en unidades mínimas: NUMERIC(78,0) cabe cualquier uint256 (ETH tiene 18 decimales).
 -- Ids públicos con prefijo, generados en la app.
@@ -94,3 +109,16 @@ CREATE TABLE events (
 );
 CREATE INDEX events_merchant_idx ON events (merchant_id, created_at DESC, id DESC);
 CREATE INDEX events_pending_idx ON events (next_attempt_at) WHERE delivery_status = 'pending';
+""")
+
+
+def downgrade() -> None:
+    # En orden inverso a las claves foráneas.
+    op.execute("""
+DROP TABLE events;
+DROP TABLE webhook_endpoints;
+DROP TABLE payment_intents;
+DROP TABLE payment_links;
+DROP TABLE api_keys;
+DROP TABLE merchants;
+""")

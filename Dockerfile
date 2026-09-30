@@ -1,4 +1,4 @@
-# Una sola imagen para la app y las tareas (migraciones; más adelante el worker). ADR-003.
+# Imagen de la app Next.js (ADR-003). Las migraciones tienen su propia imagen: db/Dockerfile (ADR-014).
 FROM node:24-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -22,12 +22,6 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
-# Next.js mete `postgres` dentro de su bundle; los scripts (migrate) lo necesitan como paquete.
-# `postgres` no tiene dependencias, así que basta con copiar su carpeta.
-COPY --from=deps /app/node_modules/postgres ./node_modules/postgres
-COPY db ./db
-COPY lib ./lib
-COPY scripts ./scripts
 USER node
 EXPOSE 3000
 CMD ["node", "server.js"]

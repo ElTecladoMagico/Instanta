@@ -21,15 +21,9 @@ services:
       retries: 10
 
   migrate:
-    image: instanta-app
-    build: &build
-      context: .
-      args:
-        NEXT_PUBLIC_CONVEX_URL: ${NEXT_PUBLIC_CONVEX_URL:-}
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}
-        NEXT_PUBLIC_ALCHEMY_RPC_URL: ${NEXT_PUBLIC_ALCHEMY_RPC_URL:-}
-        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-}
-    command: ["node", "scripts/migrate.ts"]
+    # Alembic en su propia imagen de Python (ADR-014); aplica las migraciones y termina.
+    image: instanta-migrate
+    build: ./db
     environment:
       DATABASE_URL: postgres://instanta:${POSTGRES_PASSWORD:-dev}@postgres:5432/instanta
     depends_on:
@@ -38,7 +32,13 @@ services:
 
   app:
     image: instanta-app
-    build: *build
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_CONVEX_URL: ${NEXT_PUBLIC_CONVEX_URL:-}
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}
+        NEXT_PUBLIC_ALCHEMY_RPC_URL: ${NEXT_PUBLIC_ALCHEMY_RPC_URL:-}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-}
     restart: unless-stopped
     env_file: .env
     environment:

@@ -46,3 +46,7 @@ next-env.d.ts
 
 # Cursor: configuración local del editor, ajena al proyecto (ADR-012)
 /.cursor/
+
+# Python (migraciones con Alembic, ADR-014)
+__pycache__/
+.pytest_cache/
