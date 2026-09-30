@@ -1,7 +1,7 @@
 # ADR-008: Verificación on-chain — función pura sobre el recibo, asociación por `tx_hash`
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Propuesta  
+**Estado:** Propuesta — rama de verificación para ETH añadida por [ADR-013](013-eth-nativo-en-testnet.md)  
 **Contexto:** Es el núcleo del producto: decidir, sin custodiar fondos, si un pago se ha hecho de verdad
 
 ---
