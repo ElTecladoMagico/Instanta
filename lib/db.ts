@@ -12,3 +12,7 @@ export const sql = postgres(process.env.DATABASE_URL as string, {
     },
   },
 });
+
+// Al escribir importes, usar siempre numeric(importe). El driver envía los bigint de JS como int8,
+// que no pasa de 2^63 (≈ 9,2 ETH en wei); así se envían como NUMERIC y cabe cualquier uint256.
+export const numeric = (value: bigint) => sql.typed.numeric(value);

@@ -3,7 +3,7 @@
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
-import { sql } from "../lib/db.ts";
+import { numeric, sql } from "../lib/db.ts";
 import { newId } from "../lib/ids.ts";
 
 after(() => sql.end());
@@ -35,7 +35,7 @@ async function insertIntent(overrides: Record<string, unknown> = {}) {
     expires_at: new Date(Date.now() + 3_600_000),
     ...overrides,
   };
-  await sql`INSERT INTO payment_intents ${sql(row)}`;
+  await sql`INSERT INTO payment_intents ${sql({ ...row, amount: numeric(row.amount as bigint) })}`;
   return row;
 }
 
