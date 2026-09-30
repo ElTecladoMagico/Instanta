@@ -9,7 +9,7 @@
 | [005](005-api-publica-contract-first.md) | API pública tipo Stripe, primero en OpenAPI | Propuesta |
 | [006](006-autenticacion-clerk-y-api-keys.md) | Clerk para el dashboard, API keys propias para la API | Propuesta |
 | [007](007-dinero-y-maquina-de-estados.md) | Dinero como entero y máquina de estados en SQL | Propuesta |
-| [008](008-verificacion-on-chain.md) | Verificación on-chain como función pura, asociación por `tx_hash` | Propuesta |
+| [008](008-verificacion-on-chain.md) | Verificación on-chain como función pura, asociación por `tx_hash` | Aceptada |
 | [009](009-webhooks-outbox.md) | Webhooks con outbox en Postgres y firma HMAC | Propuesta |
 | [010](010-checkout-y-boton-embebible.md) | Checkout alojado único; el botón crea un PaymentIntent | Propuesta |
 | [011](011-tests-y-ci.md) | Tests con `node:test` y CI en GitHub Actions | Aceptada |
