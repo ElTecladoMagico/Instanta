@@ -1,7 +1,7 @@
 # ADR-001: Workflow de desarrollo — concurrently en vez de Docker
 
 **Fecha:** 21 de febrero de 2026  
-**Estado:** Aceptada  
+**Estado:** Sustituida por [ADR-003](003-monolito-worker-despliegue-vm.md) (30 de septiembre de 2026)  
 **Contexto:** Simplificar el workflow de desarrollo local
 
 ---
