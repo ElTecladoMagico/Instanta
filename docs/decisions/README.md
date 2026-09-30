@@ -3,8 +3,8 @@
 | ADR | Decisión | Estado |
 |---|---|---|
 | [001](001-dev-workflow-no-docker.md) | Workflow de desarrollo con `concurrently`, sin Docker | Sustituida por 003 |
-| [002](002-postgres-sql-en-vez-de-convex.md) | PostgreSQL con SQL a mano en vez de Convex | Propuesta |
-| [003](003-monolito-worker-despliegue-vm.md) | Monolito Next.js + worker, desplegado en VM con Docker Compose | Propuesta |
+| [002](002-postgres-sql-en-vez-de-convex.md) | PostgreSQL con SQL a mano en vez de Convex | Aceptada |
+| [003](003-monolito-worker-despliegue-vm.md) | Monolito Next.js + worker, desplegado en VM con Docker Compose | Aceptada |
 | [004](004-modelo-de-amenazas.md) | Modelo de amenazas antes de implementar | Propuesta |
 | [005](005-api-publica-contract-first.md) | API pública tipo Stripe, primero en OpenAPI | Propuesta |
 | [006](006-autenticacion-clerk-y-api-keys.md) | Clerk para el dashboard, API keys propias para la API | Propuesta |
@@ -12,7 +12,7 @@
 | [008](008-verificacion-on-chain.md) | Verificación on-chain como función pura, asociación por `tx_hash` | Propuesta |
 | [009](009-webhooks-outbox.md) | Webhooks con outbox en Postgres y firma HMAC | Propuesta |
 | [010](010-checkout-y-boton-embebible.md) | Checkout alojado único; el botón crea un PaymentIntent | Propuesta |
-| [011](011-tests-y-ci.md) | Tests con `node:test` y CI en GitHub Actions | Propuesta |
+| [011](011-tests-y-ci.md) | Tests con `node:test` y CI en GitHub Actions | Aceptada |
 | [012](012-alcance-del-producto.md) | Alcance del producto y trabajo futuro | Propuesta |
 | [013](013-eth-nativo-en-testnet.md) | Admitir ETH nativo además de USDC (pruebas en testnet) | Propuesta |
 

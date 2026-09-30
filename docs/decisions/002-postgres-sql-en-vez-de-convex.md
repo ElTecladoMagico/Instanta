@@ -1,7 +1,7 @@
 # ADR-002: Persistencia — PostgreSQL con SQL escrito a mano en vez de Convex
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Propuesta  
+**Estado:** Aceptada (30/09/2026; se usa PostgreSQL 18)  
 **Contexto:** Pasar de un prototipo sobre Convex a un backend propio con API pública tipo Stripe
 
 ---
