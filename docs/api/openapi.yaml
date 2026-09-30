@@ -497,8 +497,13 @@ components:
           description: Contrato del token; `null` si la moneda es `eth`.
         tx_hash:
           oneOf: [{ $ref: "#/components/schemas/TxHash" }, { type: "null" }]
-        client_secret: { type: string }
-        checkout_url: { type: string, format: uri }
+        client_secret:
+          type: [string, "null"]
+          description: Solo en la respuesta de creación; después `null`, porque en la BD solo se guarda su hash (ADR-010).
+        checkout_url:
+          type: [string, "null"]
+          format: uri
+          description: Solo en la respuesta de creación, igual que `client_secret`.
         description: { type: [string, "null"] }
         metadata: { $ref: "#/components/schemas/Metadata" }
         return_url: { type: [string, "null"], format: uri }

@@ -34,7 +34,7 @@ Todo pago es un `payment_intent`. Solo cambia quién lo crea:
 
 **Página única:** `/pay/:client_secret`.
 
-- `client_secret` = `pi_<id>_secret_<aleatorio>`. En la BD se guarda solo su hash.
+- `client_secret` = `pi_<id>_secret_<aleatorio>`. En la BD se guarda solo su hash, así que la API **solo lo devuelve al crear el pago** (junto con `checkout_url`); al consultarlo después viene `null`. Stripe sí lo devuelve siempre, pero eso obligaría a guardarlo en claro.
 - Solo permite **leer los datos de pago de ese intent y enviar su `tx_hash`**. No sirve para nada más, así que puede viajar en la URL sin riesgo para el comercio.
 - Aun así es un secreto en una URL: la página responde con `Referrer-Policy: no-referrer` para que no se filtre por la cabecera `Referer` al `return_url` ni a scripts de terceros, y ningún log guarda rutas con `_secret_` (Caddy no registra accesos por defecto).
 - `submit` solo se acepta en `requires_payment`: una vez enviada una transacción no se puede sustituir por otra.

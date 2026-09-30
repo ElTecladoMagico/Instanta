@@ -15,3 +15,4 @@ Cada entrada sigue la misma estructura: **qué se hizo**, **por qué**, **cómo*
 | 06 | [Tests de todo lo existente (y un fallo encontrado)](06-tests-existentes.md) | 30/09/2026 | 3 |
 | 07 | [Verificación on-chain: `verify()`](07-verify.md) | 30/09/2026 | 4 |
 | 08 | [Mapa de la arquitectura: piezas, conexiones, Caddy y túneles](08-arquitectura.md) | 30/09/2026 | — |
+| 09 | [API keys y API de pagos (`/v1/payment_intents`)](09-api-pagos.md) | 30/09/2026 | 5 |
