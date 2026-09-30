@@ -1,13 +1,10 @@
 // API keys para que el servidor del comercio use la API (ADR-006).
 // La clave se muestra una sola vez; en la base de datos solo se guarda su SHA-256 (ADR-004, T7).
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { sql } from "./db.ts";
-import { newId } from "./ids.ts";
+import { newId, sha256 } from "./ids.ts";
 
 export type Auth = { merchantId: string; livemode: boolean };
-
-// SHA-256 basta (no hace falta bcrypt): la clave es aleatoria de 256 bits, no una contraseña que adivinar.
-const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
 
 export function generateApiKey(livemode: boolean) {
   const key = `sk_${livemode ? "live" : "test"}_${randomBytes(32).toString("base64url")}`;
