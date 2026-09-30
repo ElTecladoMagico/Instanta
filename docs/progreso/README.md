@@ -13,3 +13,4 @@ Cada entrada sigue la misma estructura: **qué se hizo**, **por qué**, **cómo*
 | 04 | [Esqueleto desplegado de punta a punta](04-esqueleto.md) | 30/09/2026 | 3 |
 | 05 | [Migraciones con Alembic](05-alembic.md) | 30/09/2026 | 3 |
 | 06 | [Tests de todo lo existente (y un fallo encontrado)](06-tests-existentes.md) | 30/09/2026 | 3 |
+| 07 | [Verificación on-chain: `verify()`](07-verify.md) | 30/09/2026 | 4 |
