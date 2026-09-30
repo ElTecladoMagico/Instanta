@@ -1,0 +1,49 @@
+{
+  "transaction": {
+    "type": "0x0",
+    "chainId": "0x14a34",
+    "nonce": "0x1258",
+    "gasPrice": "0x7b98a0",
+    "gas": "0x88b8",
+    "to": "0xac50945444bdf9fef69b9a74819f093a4b491d0b",
+    "value": "0x9184e72a000",
+    "input": "0x",
+    "r": "0x1d21316dcf045ac02d098cecbbc89bd14a58f83c85f17167b471a74d4a30fe81",
+    "s": "0x1d33f36bb4cc0cf3ba37a13831028c15fed745bc9a9b58c11e042fd6957d033c",
+    "v": "0x2948c",
+    "hash": "0xc5304866a3fbb82dcff8b4f1781192ac5e74caf2f6b9c33368948c3d167ae3ea",
+    "blockHash": "0xd9e017402fae43d29f8f15ccf0f0226dbdc698fd47fcf70c507a909848e83a43",
+    "blockNumber": "0x2d4fada",
+    "transactionIndex": "0x5",
+    "blockTimestamp": "0x6abd5494",
+    "from": "0xac50945444bdf9fef69b9a74819f093a4b491d0b"
+  },
+  "receipt": {
+    "type": "0x0",
+    "status": "0x1",
+    "cumulativeGasUsed": "0x1df091",
+    "logs": [],
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "transactionHash": "0xc5304866a3fbb82dcff8b4f1781192ac5e74caf2f6b9c33368948c3d167ae3ea",
+    "transactionIndex": "0x5",
+    "blockHash": "0xd9e017402fae43d29f8f15ccf0f0226dbdc698fd47fcf70c507a909848e83a43",
+    "blockNumber": "0x2d4fada",
+    "gasUsed": "0x5208",
+    "effectiveGasPrice": "0x7b98a0",
+    "blobGasUsed": "0xae38",
+    "from": "0xac50945444bdf9fef69b9a74819f093a4b491d0b",
+    "to": "0xac50945444bdf9fef69b9a74819f093a4b491d0b",
+    "contractAddress": null,
+    "l1GasPrice": "0x3dbd3a26",
+    "l1GasUsed": "0x640",
+    "l1Fee": "0x15709521d",
+    "l1BaseFeeScalar": "0x44d",
+    "l1BlobBaseFee": "0x38cea2f",
+    "l1BlobBaseFeeScalar": "0xa118b",
+    "daFootprintGasScalar": "0x1be"
+  },
+  "block": {
+    "number": "0x2d4fada",
+    "timestamp": "0x6abd5494"
+  }
+}
