@@ -36,6 +36,8 @@ Todo pago es un `payment_intent`. Solo cambia quién lo crea:
 
 - `client_secret` = `pi_<id>_secret_<aleatorio>`. En la BD se guarda solo su hash.
 - Solo permite **leer los datos de pago de ese intent y enviar su `tx_hash`**. No sirve para nada más, así que puede viajar en la URL sin riesgo para el comercio.
+- Aun así es un secreto en una URL: la página responde con `Referrer-Policy: no-referrer` para que no se filtre por la cabecera `Referer` al `return_url` ni a scripts de terceros, y ningún log guarda rutas con `_secret_` (Caddy no registra accesos por defecto).
+- `submit` solo se acepta en `requires_payment`: una vez enviada una transacción no se puede sustituir por otra.
 - La página pide los datos con `GET /v1/checkout/:client_secret`, conecta la cartera con wagmi, llama a `transfer` del contrato USDC y envía el hash con `POST .../submit`.
 - El estado se actualiza consultando cada 2–3 s (sustituye la reactividad de Convex). Si se necesitara tiempo real, *Server-Sent Events*.
 - Al terminar: pantalla de éxito y, si el intent tiene `return_url`, redirección al comercio.

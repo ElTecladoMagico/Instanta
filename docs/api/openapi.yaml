@@ -11,7 +11,7 @@ info:
     - Autenticación con `Authorization: Bearer sk_test_...` (ADR-006).
     - Importes como string con un entero en unidades mínimas: `"10000000"` = 10 USDC (ADR-007).
     - Fechas como segundos Unix.
-    - Ids con prefijo: `pi_` (pago), `evt_` (evento), `we_` (webhook), `pl_` (payment link).
+    - Ids con prefijo y 128 bits aleatorios en hexadecimal: `pi_` (pago), `evt_` (evento), `we_` (webhook), `pl_` (payment link).
     - Toda respuesta lleva la cabecera `Request-Id`.
     - Modo test = Base Sepolia (`chain_id` 84532); modo live = Base (`chain_id` 8453).
 
@@ -19,6 +19,10 @@ info:
     cabecera `Instanta-Signature: t=<unix>,v1=<hex>`, donde
     `v1 = HMAC-SHA256(secret, t + "." + cuerpo)`. La entrega es *al menos una vez*:
     deduplica por `event.id`.
+
+    **`client_secret`** (ADR-010): viaja en la URL del checkout, así que la página `/pay/...`
+    responde con `Referrer-Policy: no-referrer` (no se filtra al `return_url` ni a terceros)
+    y ningún log registra rutas con `_secret_`.
   license:
     name: Todos los derechos reservados (TFG)
     identifier: LicenseRef-TFG
@@ -183,6 +187,7 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/CheckoutSession" }
         "404": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
 
   /v1/checkout/{client_secret}/submit:
     parameters:
@@ -195,6 +200,8 @@ paths:
         El pago pasa a `processing` y se verifica en la cadena (ADR-008). Una misma
         transacción solo puede pagar un intent: si ya se usó, `409 tx_already_used` (ADR-004, T2).
         El cuerpo no admite importe ni destino: se ignoran los datos que no sean `tx_hash`.
+        Solo si está en `requires_payment`; en otro estado, `409 payment_intent_unexpected_state`
+        (no se puede sustituir una transacción ya enviada).
       security: []
       requestBody:
         required: true
@@ -215,13 +222,14 @@ paths:
         "400": { $ref: "#/components/responses/Error" }
         "404": { $ref: "#/components/responses/Error" }
         "409": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
 
   /v1/payment_links/{id}/checkout:
     parameters:
       - name: id
         in: path
         required: true
-        schema: { type: string, pattern: "^pl_[A-Za-z0-9_-]+$" }
+        schema: { type: string, pattern: "^pl_[0-9a-f]{32}$" }
     post:
       tags: [PaymentLinks]
       operationId: createCheckoutFromLink
@@ -262,6 +270,8 @@ paths:
                 url:
                   type: string
                   format: uri
+                  pattern: "^https?://"
+                  maxLength: 2048
                   description: Solo `https` en modo live. No se admiten direcciones privadas ni `localhost` (SSRF, ADR-009).
       responses:
         "201":
@@ -304,7 +314,7 @@ paths:
       - name: id
         in: path
         required: true
-        schema: { type: string, pattern: "^we_[A-Za-z0-9_-]+$" }
+        schema: { type: string, pattern: "^we_[0-9a-f]{32}$" }
     delete:
       tags: [WebhookEndpoints]
       operationId: deleteWebhookEndpoint
@@ -357,7 +367,7 @@ paths:
       - name: id
         in: path
         required: true
-        schema: { type: string, pattern: "^evt_[A-Za-z0-9_-]+$" }
+        schema: { type: string, pattern: "^evt_[0-9a-f]{32}$" }
     get:
       tags: [Events]
       operationId: getEvent
@@ -409,13 +419,13 @@ components:
       name: id
       in: path
       required: true
-      schema: { type: string, pattern: "^pi_[A-Za-z0-9_-]+$" }
+      schema: { type: string, pattern: "^pi_[0-9a-f]{32}$" }
     ClientSecret:
       name: client_secret
       in: path
       required: true
       description: "`pi_<id>_secret_<aleatorio>`. Solo permite leer los datos de pago y enviar el `tx_hash` de ese pago."
-      schema: { type: string, pattern: "^pi_[A-Za-z0-9_-]+_secret_[A-Za-z0-9_-]+$" }
+      schema: { type: string, pattern: "^pi_[0-9a-f]{32}_secret_[0-9a-f]{32}$" }
     Limit:
       name: limit
       in: query
@@ -472,7 +482,7 @@ components:
         amount: { $ref: "#/components/schemas/Amount" }
         amount_received:
           type: string
-          pattern: "^[0-9]+$"
+          pattern: "^[0-9]{1,19}$"
           description: Lo recibido según la cadena. Puede superar `amount` si el comprador paga de más.
         currency: { $ref: "#/components/schemas/Currency" }
         status: { $ref: "#/components/schemas/PaymentIntentStatus" }
@@ -492,7 +502,7 @@ components:
         expires_at: { type: integer }
         succeeded_at: { type: [integer, "null"] }
       example:
-        id: pi_3xKq9LmZ
+        id: pi_4f1c9a7be2d84c06a5b3e19f7c2d8a61
         object: payment_intent
         livemode: false
         amount: "10000000"
@@ -504,8 +514,8 @@ components:
         chain_id: 84532
         token_address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
         tx_hash: null
-        client_secret: pi_3xKq9LmZ_secret_9fQa2
-        checkout_url: https://instanta.scuda.es/pay/pi_3xKq9LmZ_secret_9fQa2
+        client_secret: pi_4f1c9a7be2d84c06a5b3e19f7c2d8a61_secret_9b2e7d4c1a8f3e6b0d5c2a9f8e7b6c1d
+        checkout_url: https://instanta.scuda.es/pay/pi_4f1c9a7be2d84c06a5b3e19f7c2d8a61_secret_9b2e7d4c1a8f3e6b0d5c2a9f8e7b6c1d
         description: Camiseta talla M
         metadata: { order_id: "1234" }
         return_url: null
@@ -596,7 +606,7 @@ components:
               description: |
                 Código estable para programar contra él. Ejemplos: `parameter_invalid`,
                 `api_key_invalid`, `resource_missing`, `tx_already_used`,
-                `payment_intent_unexpected_state`, `payout_address_missing`, `service_unavailable`.
+                `payment_intent_unexpected_state`, `payout_address_missing`, `service_unavailable`, `rate_limited`.
             message: { type: string, description: "Texto para personas; puede cambiar." }
             param: { type: string, description: "Parámetro que causó el error, si aplica." }
       example:
