@@ -1,0 +1,28 @@
+name: CI
+
+on: [push]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: instanta
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: instanta
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U instanta" --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://instanta:ci@localhost:5432/instanta
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm test
