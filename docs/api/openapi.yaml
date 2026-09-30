@@ -1,0 +1,607 @@
+openapi: 3.1.0
+info:
+  title: Instanta API
+  version: "1"
+  summary: Pagos en USDC sobre Base, no custodiales, con una API al estilo de Stripe.
+  description: |
+    Instanta permite a un comercio cobrar en USDC sin custodiar fondos: el comprador
+    paga directamente a la cartera del comercio y Instanta verifica el pago en la cadena.
+
+    **Convenciones** (ADR-005):
+    - Autenticación con `Authorization: Bearer sk_test_...` (ADR-006).
+    - Importes como string con un entero en unidades mínimas: `"10000000"` = 10 USDC (ADR-007).
+    - Fechas como segundos Unix.
+    - Ids con prefijo: `pi_` (pago), `evt_` (evento), `we_` (webhook), `pl_` (payment link).
+    - Toda respuesta lleva la cabecera `Request-Id`.
+    - Modo test = Base Sepolia (`chain_id` 84532); modo live = Base (`chain_id` 8453).
+
+    **Webhooks** (ADR-009): cada evento se envía por POST al endpoint del comercio con la
+    cabecera `Instanta-Signature: t=<unix>,v1=<hex>`, donde
+    `v1 = HMAC-SHA256(secret, t + "." + cuerpo)`. La entrega es *al menos una vez*:
+    deduplica por `event.id`.
+  license:
+    name: Todos los derechos reservados (TFG)
+    identifier: LicenseRef-TFG
+servers:
+  - url: https://instanta.scuda.es
+security:
+  - secretKey: []
+
+tags:
+  - name: PaymentIntents
+    description: Pagos creados por el servidor del comercio.
+  - name: Checkout
+    description: Rutas públicas que usa la página de pago. Se autorizan con el `client_secret`, no con API key.
+  - name: PaymentLinks
+    description: Botones embebibles sin código (ADR-010).
+  - name: WebhookEndpoints
+    description: Dónde recibe el comercio los eventos.
+  - name: Events
+    description: Historial de eventos enviados por webhook.
+  - name: Health
+    description: Estado del servicio.
+
+paths:
+  /v1/health:
+    get:
+      tags: [Health]
+      operationId: getHealth
+      summary: Estado del servicio y de la base de datos
+      security: []
+      responses:
+        "200":
+          description: Servicio operativo
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, database]
+                properties:
+                  status: { type: string, const: ok }
+                  database: { type: string, const: ok }
+        "503": { $ref: "#/components/responses/Error" }
+
+  /v1/payment_intents:
+    post:
+      tags: [PaymentIntents]
+      operationId: createPaymentIntent
+      summary: Crear un pago
+      description: |
+        `pay_to`, `token_address` y `chain_id` los fija el servidor a partir de la cartera
+        del comercio y del modo de la API key; el cliente no puede elegirlos (ADR-004, T5).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, currency]
+              additionalProperties: false
+              properties:
+                amount: { $ref: "#/components/schemas/Amount" }
+                currency: { $ref: "#/components/schemas/Currency" }
+                description: { type: string, maxLength: 500 }
+                metadata: { $ref: "#/components/schemas/Metadata" }
+                return_url:
+                  type: string
+                  format: uri
+                  description: A dónde redirige el checkout al terminar. Solo `https` en modo live.
+                expires_in:
+                  type: integer
+                  minimum: 300
+                  maximum: 86400
+                  default: 3600
+                  description: Segundos hasta que caduca si no se paga.
+      responses:
+        "201":
+          description: Pago creado
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentIntent" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+    get:
+      tags: [PaymentIntents]
+      operationId: listPaymentIntents
+      summary: Listar pagos
+      description: Más recientes primero. Paginación por cursor.
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/StartingAfter"
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/PaymentIntentStatus" }
+      responses:
+        "200":
+          description: Lista de pagos
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ListBase"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/PaymentIntent" }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /v1/payment_intents/{id}:
+    parameters:
+      - $ref: "#/components/parameters/PaymentIntentId"
+    get:
+      tags: [PaymentIntents]
+      operationId: getPaymentIntent
+      summary: Consultar un pago
+      description: Si está en `processing`, el servidor intenta verificarlo antes de responder (ADR-008).
+      responses:
+        "200":
+          description: El pago
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentIntent" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /v1/payment_intents/{id}/cancel:
+    parameters:
+      - $ref: "#/components/parameters/PaymentIntentId"
+    post:
+      tags: [PaymentIntents]
+      operationId: cancelPaymentIntent
+      summary: Cancelar un pago
+      description: Solo si está en `requires_payment`. En cualquier otro estado devuelve `409 payment_intent_unexpected_state`.
+      responses:
+        "200":
+          description: Pago cancelado
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentIntent" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+
+  /v1/checkout/{client_secret}:
+    parameters:
+      - $ref: "#/components/parameters/ClientSecret"
+    get:
+      tags: [Checkout]
+      operationId: getCheckout
+      summary: Datos que necesita la página de pago
+      security: []
+      responses:
+        "200":
+          description: Datos del pago, sin información privada del comercio
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutSession" }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /v1/checkout/{client_secret}/submit:
+    parameters:
+      - $ref: "#/components/parameters/ClientSecret"
+    post:
+      tags: [Checkout]
+      operationId: submitCheckout
+      summary: Enviar la transacción del comprador
+      description: |
+        El pago pasa a `processing` y se verifica en la cadena (ADR-008). Una misma
+        transacción solo puede pagar un intent: si ya se usó, `409 tx_already_used` (ADR-004, T2).
+        El cuerpo no admite importe ni destino: se ignoran los datos que no sean `tx_hash`.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tx_hash]
+              properties:
+                tx_hash: { $ref: "#/components/schemas/TxHash" }
+      responses:
+        "200":
+          description: Estado del pago tras la verificación inicial
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutSession" }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+
+  /v1/payment_links/{id}/checkout:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, pattern: "^pl_[A-Za-z0-9_-]+$" }
+    post:
+      tags: [PaymentLinks]
+      operationId: createCheckoutFromLink
+      summary: Crear un pago a partir de un botón embebido
+      description: |
+        Lo llama `button.js` al hacer clic (ADR-010). Público: el importe y el destino salen
+        del enlace guardado, nunca de la petición. Los pagos creados así caducan en 1 hora.
+      security: []
+      responses:
+        "201":
+          description: URL del checkout del nuevo pago
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [checkout_url]
+                properties:
+                  checkout_url: { type: string, format: uri }
+        "404": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+
+  /v1/webhook_endpoints:
+    post:
+      tags: [WebhookEndpoints]
+      operationId: createWebhookEndpoint
+      summary: Registrar el endpoint de webhooks
+      description: Uno por comercio y modo en esta versión. El `secret` solo se devuelve en esta respuesta.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              additionalProperties: false
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Solo `https` en modo live. No se admiten direcciones privadas ni `localhost` (SSRF, ADR-009).
+      responses:
+        "201":
+          description: Endpoint creado
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/WebhookEndpoint"
+                  - type: object
+                    required: [secret]
+                    properties:
+                      secret: { type: string, pattern: "^whsec_", description: "Se muestra una sola vez." }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+    get:
+      tags: [WebhookEndpoints]
+      operationId: listWebhookEndpoints
+      summary: Listar endpoints
+      responses:
+        "200":
+          description: Lista de endpoints
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ListBase"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/WebhookEndpoint" }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /v1/webhook_endpoints/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, pattern: "^we_[A-Za-z0-9_-]+$" }
+    delete:
+      tags: [WebhookEndpoints]
+      operationId: deleteWebhookEndpoint
+      summary: Eliminar un endpoint
+      responses:
+        "200":
+          description: Eliminado
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, object, deleted]
+                properties:
+                  id: { type: string }
+                  object: { type: string, const: webhook_endpoint }
+                  deleted: { type: boolean, const: true }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /v1/events:
+    get:
+      tags: [Events]
+      operationId: listEvents
+      summary: Listar eventos
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/StartingAfter"
+        - name: type
+          in: query
+          schema: { $ref: "#/components/schemas/EventType" }
+      responses:
+        "200":
+          description: Lista de eventos
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/ListBase"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/Event" }
+        "401": { $ref: "#/components/responses/Error" }
+
+  /v1/events/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string, pattern: "^evt_[A-Za-z0-9_-]+$" }
+    get:
+      tags: [Events]
+      operationId: getEvent
+      summary: Consultar un evento
+      responses:
+        "200":
+          description: El evento
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Event" }
+        "401": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+
+webhooks:
+  paymentIntentEvent:
+    post:
+      operationId: receivePaymentIntentEvent
+      summary: Evento enviado al endpoint del comercio
+      security: []
+      parameters:
+        - name: Instanta-Signature
+          in: header
+          required: true
+          schema: { type: string, example: "t=1790000000,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a0e56ff536d0ce8e108d8bd" }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Event" }
+      responses:
+        "2XX":
+          description: Recibido. Cualquier otra respuesta, o no responder en 10 s, provoca reintentos.
+
+components:
+  securitySchemes:
+    secretKey:
+      type: http
+      scheme: bearer
+      description: "Clave secreta `sk_test_...` o `sk_live_...`. Solo desde el servidor del comercio."
+
+  headers:
+    RequestId:
+      description: Identificador de la petición (`req_...`), también presente en los logs.
+      schema: { type: string, pattern: "^req_" }
+
+  parameters:
+    PaymentIntentId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, pattern: "^pi_[A-Za-z0-9_-]+$" }
+    ClientSecret:
+      name: client_secret
+      in: path
+      required: true
+      description: "`pi_<id>_secret_<aleatorio>`. Solo permite leer los datos de pago y enviar el `tx_hash` de ese pago."
+      schema: { type: string, pattern: "^pi_[A-Za-z0-9_-]+_secret_[A-Za-z0-9_-]+$" }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+    StartingAfter:
+      name: starting_after
+      in: query
+      description: Id del último objeto de la página anterior.
+      schema: { type: string }
+
+  responses:
+    Error:
+      description: Error
+      headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Amount:
+      type: string
+      pattern: "^[1-9][0-9]{0,17}$"
+      description: Entero positivo en unidades mínimas del token (USDC tiene 6 decimales).
+      example: "10000000"
+    Currency:
+      type: string
+      enum: [usdc]
+    Metadata:
+      type: object
+      maxProperties: 20
+      additionalProperties: { type: string, maxLength: 500 }
+      description: Pares clave-valor libres del comercio (p. ej. `order_id`). Se devuelven tal cual.
+    TxHash:
+      type: string
+      pattern: "^0x[0-9a-fA-F]{64}$"
+    Address:
+      type: string
+      pattern: "^0x[0-9a-fA-F]{40}$"
+    PaymentIntentStatus:
+      type: string
+      enum: [requires_payment, processing, succeeded, failed, canceled, expired]
+      description: Ver la máquina de estados de ADR-007. `succeeded`, `failed`, `canceled` y `expired` son finales.
+    FailureCode:
+      type: string
+      enum: [reverted, amount_mismatch, wrong_recipient, wrong_token, tx_too_old, tx_not_found]
+
+    PaymentIntent:
+      type: object
+      required: [id, object, livemode, amount, amount_received, currency, status, pay_to, chain_id, token_address, tx_hash, client_secret, checkout_url, created, expires_at]
+      properties:
+        id: { type: string, pattern: "^pi_" }
+        object: { type: string, const: payment_intent }
+        livemode: { type: boolean }
+        amount: { $ref: "#/components/schemas/Amount" }
+        amount_received:
+          type: string
+          pattern: "^[0-9]+$"
+          description: Lo recibido según la cadena. Puede superar `amount` si el comprador paga de más.
+        currency: { $ref: "#/components/schemas/Currency" }
+        status: { $ref: "#/components/schemas/PaymentIntentStatus" }
+        failure_code:
+          oneOf: [{ $ref: "#/components/schemas/FailureCode" }, { type: "null" }]
+        pay_to: { $ref: "#/components/schemas/Address" }
+        chain_id: { type: integer, enum: [84532, 8453] }
+        token_address: { $ref: "#/components/schemas/Address" }
+        tx_hash:
+          oneOf: [{ $ref: "#/components/schemas/TxHash" }, { type: "null" }]
+        client_secret: { type: string }
+        checkout_url: { type: string, format: uri }
+        description: { type: [string, "null"] }
+        metadata: { $ref: "#/components/schemas/Metadata" }
+        return_url: { type: [string, "null"], format: uri }
+        created: { type: integer }
+        expires_at: { type: integer }
+        succeeded_at: { type: [integer, "null"] }
+      example:
+        id: pi_3xKq9LmZ
+        object: payment_intent
+        livemode: false
+        amount: "10000000"
+        amount_received: "0"
+        currency: usdc
+        status: requires_payment
+        failure_code: null
+        pay_to: "0x1111111111111111111111111111111111111111"
+        chain_id: 84532
+        token_address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+        tx_hash: null
+        client_secret: pi_3xKq9LmZ_secret_9fQa2
+        checkout_url: https://instanta.scuda.es/pay/pi_3xKq9LmZ_secret_9fQa2
+        description: Camiseta talla M
+        metadata: { order_id: "1234" }
+        return_url: null
+        created: 1790000000
+        expires_at: 1790003600
+        succeeded_at: null
+
+    CheckoutSession:
+      type: object
+      description: Vista pública de un pago para la página de checkout. No incluye `metadata` ni datos del comercio más allá de su nombre.
+      required: [id, amount, currency, status, pay_to, chain_id, token_address, merchant_name, expires_at]
+      properties:
+        id: { type: string, pattern: "^pi_" }
+        amount: { $ref: "#/components/schemas/Amount" }
+        currency: { $ref: "#/components/schemas/Currency" }
+        status: { $ref: "#/components/schemas/PaymentIntentStatus" }
+        failure_code:
+          oneOf: [{ $ref: "#/components/schemas/FailureCode" }, { type: "null" }]
+        pay_to: { $ref: "#/components/schemas/Address" }
+        chain_id: { type: integer }
+        token_address: { $ref: "#/components/schemas/Address" }
+        merchant_name: { type: string }
+        description: { type: [string, "null"] }
+        tx_hash:
+          oneOf: [{ $ref: "#/components/schemas/TxHash" }, { type: "null" }]
+        return_url: { type: [string, "null"], format: uri }
+        expires_at: { type: integer }
+
+    WebhookEndpoint:
+      type: object
+      required: [id, object, livemode, url, enabled, created]
+      properties:
+        id: { type: string, pattern: "^we_" }
+        object: { type: string, const: webhook_endpoint }
+        livemode: { type: boolean }
+        url: { type: string, format: uri }
+        enabled: { type: boolean }
+        created: { type: integer }
+
+    EventType:
+      type: string
+      enum:
+        - payment_intent.succeeded
+        - payment_intent.failed
+        - payment_intent.canceled
+        - payment_intent.expired
+
+    Event:
+      type: object
+      required: [id, object, livemode, type, created, data]
+      properties:
+        id: { type: string, pattern: "^evt_" }
+        object: { type: string, const: event }
+        livemode: { type: boolean }
+        type: { $ref: "#/components/schemas/EventType" }
+        created: { type: integer }
+        data:
+          type: object
+          required: [object]
+          properties:
+            object: { $ref: "#/components/schemas/PaymentIntent" }
+        delivery_status:
+          type: string
+          enum: [pending, delivered, failed]
+          description: Solo en las respuestas de la API, no en el cuerpo del webhook.
+
+    ListBase:
+      type: object
+      required: [object, data, has_more]
+      properties:
+        object: { type: string, const: list }
+        data: { type: array }
+        has_more: { type: boolean }
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [type, code, message]
+          properties:
+            type:
+              type: string
+              enum: [invalid_request_error, authentication_error, api_error, rate_limit_error]
+            code:
+              type: string
+              description: |
+                Código estable para programar contra él. Ejemplos: `parameter_invalid`,
+                `api_key_invalid`, `resource_missing`, `tx_already_used`,
+                `payment_intent_unexpected_state`, `payout_address_missing`, `service_unavailable`.
+            message: { type: string, description: "Texto para personas; puede cambiar." }
+            param: { type: string, description: "Parámetro que causó el error, si aplica." }
+      example:
+        error:
+          type: invalid_request_error
+          code: tx_already_used
+          message: This transaction has already been used to pay another payment intent.
+          param: tx_hash
