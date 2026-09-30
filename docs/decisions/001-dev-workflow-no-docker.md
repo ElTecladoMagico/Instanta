@@ -54,7 +54,7 @@ Añadir un script `dev:all` que ejecute ambos procesos en paralelo usando [`conc
 
 ## Perspectiva futura: Docker probablemente llegará
 
-Esta decisión es **para el estado actual del proyecto**, no permanente. El análisis de evolución arquitectónica ([`hacia_server_propio.md`](../hacia_server_propio.md)) identifica escenarios concretos donde Instanta podría migrar hacia un backend propio con stack tradicional (FastAPI/NestJS + PostgreSQL). En ese momento, Docker pasaría de ser complejidad innecesaria a herramienta imprescindible.
+Esta decisión es **para el estado actual del proyecto**, no permanente. El análisis de evolución arquitectónica ([`hacia_server_propio.md`](../archive/hacia_server_propio.md)) identifica escenarios concretos donde Instanta podría migrar hacia un backend propio con stack tradicional (FastAPI/NestJS + PostgreSQL). En ese momento, Docker pasaría de ser complejidad innecesaria a herramienta imprescindible.
 
 Servicios complementarios que justificarían Docker Compose:
 

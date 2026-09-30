@@ -63,7 +63,7 @@ Los identificadores públicos llevan prefijo (`pi_`, `evt_`, `we_`), generados c
 
 - Se pierde la reactividad en tiempo real de Convex. El checkout y el dashboard consultarán el estado cada 2–3 s (ver ADR-010 y ADR-012). Si se necesita tiempo real de verdad, *Server-Sent Events* con `LISTEN/NOTIFY` de Postgres.
 - Convex se retira al final de la migración, no antes: el código nuevo se construye al lado y luego se borra el viejo. No se corrigen bugs en el código de Convex.
-- `docs/hacia_server_propio.md` concluía que DDD/CQRS no compensaban; esta decisión es coherente con eso: backend propio, pero sin capas formales.
+- [`docs/archive/hacia_server_propio.md`](../archive/hacia_server_propio.md) concluía que DDD/CQRS no compensaban; esta decisión es coherente con eso: backend propio, pero sin capas formales.
 
 ## Decisión
 
