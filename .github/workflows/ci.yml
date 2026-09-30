@@ -27,4 +27,4 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm run test:db   # migraciones de Alembic: upgrade, repetición y downgrade (deja la BD en head)
-      - run: npm test
+      - run: npm run test:coverage
