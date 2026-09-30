@@ -246,3 +246,13 @@ test("cancelar el pago de otro comercio → 404 (ADR-004, T6)", async () => {
   assert.equal((await cancelIntent(b.key, pi.id)).status, 404);
   assert.equal((await (await retrieve(a.key, pi.id)).json()).status, "requires_payment");
 });
+
+test("todos los endpoints de pagos exigen API key → 401", async () => {
+  const responses = await Promise.all([
+    create(undefined, usdcBody),
+    collection.GET(req("GET", "/v1/payment_intents")),
+    single.GET(req("GET", "/v1/payment_intents/pi_x"), params("pi_x")),
+    cancel.POST(req("POST", "/v1/payment_intents/pi_x/cancel"), params("pi_x")),
+  ]);
+  assert.deepEqual(responses.map((r) => r.status), [401, 401, 401, 401]);
+});
