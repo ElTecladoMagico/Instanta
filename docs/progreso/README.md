@@ -11,3 +11,4 @@ Cada entrada sigue la misma estructura: **qué se hizo**, **por qué**, **cómo*
 | 02 | [Preparación de la VPS](02-vps.md) | 30/09/2026 | 3 |
 | 03 | [Contrato de la API (OpenAPI)](03-openapi.md) | 30/09/2026 | 2 |
 | 04 | [Esqueleto desplegado de punta a punta](04-esqueleto.md) | 30/09/2026 | 3 |
+| 05 | [Migraciones con Alembic](05-alembic.md) | 30/09/2026 | 3 |
