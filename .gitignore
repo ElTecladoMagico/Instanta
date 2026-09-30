@@ -43,3 +43,6 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Cursor: configuración local del editor, ajena al proyecto (ADR-012)
+/.cursor/

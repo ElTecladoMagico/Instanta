@@ -48,7 +48,7 @@ services:
 - Una sola imagen para `app` y `worker`.
 - Caddy hace de proxy inverso y obtiene el certificado TLS solo. Requisitos: IP pública y un dominio (o subdominio) apuntando a ella.
 - Postgres **no** publica puerto hacia fuera.
-- Backups: `pg_dump` diario con cron del sistema, guardando los últimos 7 días.
+- Sin backups: solo hay datos de testnet, que se pueden regenerar. Riesgo aceptado (ver Consecuencias).
 - Secretos en un `.env` en la VM, fuera del repositorio.
 
 **En desarrollo:** `docker compose up postgres` y `npm run dev` / `npm run worker` en local, con hot-reload nativo (se mantiene la ventaja que motivó ADR-001).
@@ -60,7 +60,8 @@ Antes de escribir lógica de negocio se despliega en la VM un esqueleto mínimo 
 ## Consecuencias
 
 - Se deja Vercel. `concurrently` y el script `dev:all` se eliminan.
-- Una sola VM es un punto único de fallo. Aceptable para un prototipo; se documenta como limitación.
+- Una sola VM es un punto único de fallo y no hay backups: si el disco se pierde, se pierden los datos. Aceptable mientras solo haya datos de testnet; antes de operar en mainnet haría falta `pg_dump` diario a un almacenamiento externo. Se documenta como limitación.
+- La VPS es una Hetzner CX23 (2 vCPU, 4 GB, Helsinki) con Ubuntu 26.04, preparada con `infra/provision.sh`; el dominio es `instanta.scuda.es`.
 - **Camino a Cloud Run**: al estar todo en contenedores, migrar es cambiar variables de entorno (`DATABASE_URL` a Cloud SQL) y lanzar el worker como servicio con CPU siempre asignada. Queda como trabajo futuro.
 
 ## Decisión
