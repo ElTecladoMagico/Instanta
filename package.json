@@ -2,12 +2,15 @@
   "name": "instanta",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "dev:all": "concurrently -n next,convex -c blue,magenta \"npm run dev\" \"npx convex dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "migrate": "node scripts/migrate.ts",
+    "test": "node --test \"test/**/*.test.ts\""
   },
   "dependencies": {
     "@clerk/nextjs": "^6.35.1",
@@ -16,6 +19,7 @@
     "convex": "^1.29.1",
     "lucide-react": "^0.554.0",
     "next": "16.0.3",
+    "postgres": "^3.4.9",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "viem": "^2.39.0",

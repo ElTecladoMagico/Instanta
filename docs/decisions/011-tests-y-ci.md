@@ -1,7 +1,7 @@
 # ADR-011: Calidad — tests con `node:test` y CI en GitHub Actions
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Propuesta  
+**Estado:** Aceptada (30/09/2026)  
 **Contexto:** El prototipo no tiene ningún test y las comprobaciones de seguridad (ADR-004) necesitan demostrarse
 
 ---

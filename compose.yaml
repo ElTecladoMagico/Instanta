@@ -1,0 +1,69 @@
+# Despliegue en la VPS y Postgres para desarrollo local (ADR-003).
+#   Local:  docker compose up -d postgres
+#   VPS:    infra/deploy.sh
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: instanta
+      POSTGRES_DB: instanta
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    # Solo en localhost: accesible para desarrollo, nunca desde internet
+    # (Docker se salta ufw con los puertos que publica).
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "instanta"]
+      interval: 5s
+      retries: 10
+
+  migrate:
+    image: instanta-app
+    build: &build
+      context: .
+      args:
+        NEXT_PUBLIC_CONVEX_URL: ${NEXT_PUBLIC_CONVEX_URL:-}
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}
+        NEXT_PUBLIC_ALCHEMY_RPC_URL: ${NEXT_PUBLIC_ALCHEMY_RPC_URL:-}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-}
+    command: ["node", "scripts/migrate.ts"]
+    environment:
+      DATABASE_URL: postgres://instanta:${POSTGRES_PASSWORD:-dev}@postgres:5432/instanta
+    depends_on:
+      postgres: { condition: service_healthy }
+    profiles: [deploy]
+
+  app:
+    image: instanta-app
+    build: *build
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://instanta:${POSTGRES_PASSWORD:-dev}@postgres:5432/instanta
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    profiles: [deploy]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [app]
+    profiles: [deploy]
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

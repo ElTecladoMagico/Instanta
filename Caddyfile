@@ -1,0 +1,6 @@
+# TLS automático (Let's Encrypt) para el dominio de DOMAIN. Sin logs de acceso:
+# las URLs del checkout llevan el client_secret (ADR-010).
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}
