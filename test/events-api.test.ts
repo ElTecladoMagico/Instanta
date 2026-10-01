@@ -22,7 +22,7 @@ async function insertEvent(merchantId: string, type = "payment_intent.succeeded"
   return id;
 }
 
-const auth = (key?: string) => (key ? { authorization: `Bearer ${key}` } : {});
+const auth = (key?: string): Record<string, string> => (key ? { authorization: `Bearer ${key}` } : {});
 const list = (key: string, query = "") => collection.GET(new Request(`http://localhost/v1/events${query}`, { headers: auth(key) }));
 const get = (key: string | undefined, id: string) =>
   single.GET(new Request(`http://localhost/v1/events/${id}`, { headers: auth(key) }), { params: Promise.resolve({ id }) });
