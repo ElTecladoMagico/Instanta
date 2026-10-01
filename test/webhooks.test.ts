@@ -36,6 +36,9 @@ after(async () => {
 
 // Un comercio con su endpoint y un evento pendiente de enviar.
 async function pendingEvent({ endpoint = true as boolean, enabled = true, url = "", attempts = 0 } = {}) {
+  // El envío toma los eventos pendientes más antiguos de toda la BD: se retiran los que hayan dejado
+  // otros tests para que este caso no dependa de lo que haya en la base de datos.
+  await sql`UPDATE events SET delivery_status = 'failed' WHERE delivery_status = 'pending'`;
   const merchantId = newId("mer");
   await sql`INSERT INTO merchants (id, clerk_user_id, email) VALUES (${merchantId}, ${merchantId}, 'deliver@example.com')`;
   const secret = "whsec_test_" + merchantId;
