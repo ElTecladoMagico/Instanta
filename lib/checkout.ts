@@ -57,7 +57,7 @@ export async function submitTransaction(
 ): Promise<CheckoutRow | "not_found" | "unexpected_state" | "tx_already_used"> {
   try {
     const [updated] = await sql`
-      UPDATE payment_intents SET status = 'processing', tx_hash = ${txHash.toLowerCase()}
+      UPDATE payment_intents SET status = 'processing', tx_hash = ${txHash.toLowerCase()}, submitted_at = now()
       WHERE client_secret_hash = ${sha256(clientSecret)} AND status = 'requires_payment' AND expires_at > now()
       RETURNING id`;
     if (!updated) return (await findBySecret(clientSecret)) ? "unexpected_state" : "not_found";
