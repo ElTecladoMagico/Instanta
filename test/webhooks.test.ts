@@ -102,7 +102,8 @@ test("el comercio responde 500 → sigue pending, reintento en 1 minuto y se gua
   assert.equal(event.attempts, 1);
   assert.equal(event.last_error, "HTTP 500");
   const waitSeconds = (event.next_attempt_at.getTime() - Date.now()) / 1000;
-  assert.ok(waitSeconds > 50 && waitSeconds <= 60, `espera de ${waitSeconds} s`);
+  // Margen de ±10 s: el reloj de Postgres (en la VM de Docker) y el del test pueden ir algo desfasados.
+  assert.ok(waitSeconds > 50 && waitSeconds < 70, `espera de ${waitSeconds} s`);
 });
 
 test("tras el octavo intento fallido → failed (no se reintenta más)", async () => {

@@ -18,3 +18,4 @@ Cada entrada sigue la misma estructura: **qué se hizo**, **por qué**, **cómo*
 | 09 | [API keys y API de pagos (`/v1/payment_intents`)](09-api-pagos.md) | 30/09/2026 | 5 |
 | 10 | [Checkout, payment links y primeras pruebas E2E con pagos reales](10-checkout.md) | 01/10/2026 | 6 |
 | 11 | [Eventos, webhooks y worker](11-webhooks-worker.md) | 01/10/2026 | 7 |
+| 12 | [Dashboard, tienda de ejemplo y retirada de Convex](12-dashboard-demo.md) | 02/10/2026 | 8 |

@@ -1,115 +1,80 @@
 # Instanta
 
-Instanta is a crypto payment gateway designed for digital creators. It lets anyone accept payments in cryptocurrency by embedding a simple HTML snippet into their website — no backend required, no registration, no KYC.
+Pasarela de pagos en criptomonedas **no custodial**, con una API al estilo de Stripe. El comprador paga en USDC (o ETH) desde su cartera directamente a la cartera del comercio, en la red **Base**; Instanta verifica el pago en la blockchain y avisa al comercio con un webhook firmado. Instanta nunca toca los fondos.
 
-This project is a **Trabajo de Fin de Grado (TFG)** by Pedro Gabriel Mantese Masegosa.
+Trabajo de Fin de Grado (TFG) de Pedro Gabriel Mantese Masegosa · Desplegado en **https://instanta.scuda.es** (modo test, Base Sepolia) · Tienda de ejemplo en **https://instanta.scuda.es/demo/**
 
-## How It Works
-
-1. A **merchant** signs in, creates a payment button from the dashboard, and receives an HTML snippet.
-2. The merchant **pastes the snippet** into their website.
-3. A **buyer** clicks the button, connects their wallet, and pays directly on the Base network.
-4. The payment is **confirmed automatically** via blockchain polling — funds go directly to the merchant's wallet (non-custodial).
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | [Next.js 16](https://nextjs.org/) (App Router) + React 19 |
-| Backend / DB | [Convex](https://convex.dev/) (serverless, real-time) |
-| Authentication | [Clerk](https://clerk.com/) |
-| Blockchain | [wagmi](https://wagmi.sh/) + [viem](https://viem.sh/) on [Base Sepolia](https://docs.base.org/) (testnet) |
-| Styling | [Tailwind CSS 4](https://tailwindcss.com/) with a Material Design 3 theme |
-| Extras | canvas-confetti (success animation), lucide-react (icons) |
-
-## Prerequisites
-
-- [Node.js](https://nodejs.org/) >= 18
-- A [Convex](https://dashboard.convex.dev/) account and project
-- A [Clerk](https://dashboard.clerk.com/) application
-- (Optional) An [Alchemy](https://dashboard.alchemy.com/) API key for Base Sepolia RPC
-
-## Getting Started
+## Cómo se integra un comercio
 
 ```bash
-# 1. Clone the repository
-git clone <repo-url>
-cd Instanta
+# 1. Su servidor crea un pago con su API key
+curl -X POST https://instanta.scuda.es/v1/payment_intents \
+  -H "Authorization: Bearer sk_test_…" -H "content-type: application/json" \
+  -d '{"amount":"10000000","currency":"usdc","metadata":{"order_id":"1234"},"return_url":"https://mitienda.com/pedido/1234"}'
+# → { "id": "pi_…", "status": "requires_payment", "checkout_url": "https://instanta.scuda.es/pay/pi_…_secret_…", … }
 
-# 2. Install dependencies
+# 2. Redirige al comprador a checkout_url, que paga con su cartera.
+# 3. Recibe en su endpoint el webhook payment_intent.succeeded, firmado con Instanta-Signature.
+```
+
+Sin backend, también puede pegar un botón en su web: `<script src="https://instanta.scuda.es/button.js" defer></script><button data-instanta-link="pl_…">Pagar</button>`.
+
+Contrato completo de la API: [`docs/api/openapi.yaml`](docs/api/openapi.yaml). Ejemplo de integración real: [`examples/demo-store/`](examples/demo-store/).
+
+## Arquitectura
+
+| Pieza | Tecnología |
+|---|---|
+| Web, dashboard, checkout y API `/v1` | Next.js 16 (App Router) + React 19 |
+| Base de datos | PostgreSQL 18, SQL escrito a mano con el driver `postgres` |
+| Migraciones | Alembic (Python), con SQL a mano |
+| Inicio de sesión del comercio | Clerk |
+| Cartera del comprador | wagmi + viem |
+| Verificación on-chain | JSON-RPC al nodo de Base + Blockscout para transferencias internas |
+| Trabajo en segundo plano | Proceso `worker` (Node 24) |
+| Despliegue | VPS con Docker Compose y Caddy (HTTPS automático) |
+
+```
+lib/            lógica (con tests): pagos, verificación on-chain, webhooks, API keys, SSRF…
+src/app/v1/     API REST pública (rutas finas que llaman a lib/)
+src/app/pay/    página de pago del comprador
+src/app/dashboard/  panel del comercio (Server Components + Server Actions)
+worker/         proceso en segundo plano: caduca, verifica y envía webhooks cada 5 s
+db/             migraciones de Alembic
+examples/demo-store/  tienda de ejemplo que se integra como un comercio real
+infra/          preparación de la VPS y despliegue
+test/           tests de Node (node:test) y fixtures con transacciones reales
+docs/           decisiones (ADR), diario de progreso y contrato de la API
+```
+
+## Desarrollo local
+
+Requisitos: Node 24, Docker y [`uv`](https://docs.astral.sh/uv/) (para Alembic).
+
+```bash
 npm install
-
-# 3. Configure environment variables
-cp .env.example .env.local
-# Edit .env.local with your Convex, Clerk, and Alchemy credentials
-
-# 4. Start everything with a single command
-npm run dev:all
+cp .env.example .env.local          # claves de Clerk
+docker compose up -d postgres       # PostgreSQL en localhost:5432
+export DATABASE_URL=postgres://instanta:dev@localhost:5432/instanta
+npm run db:migrate                  # aplica las migraciones
+npm run dev                         # http://localhost:3000
+npm run worker                      # en otra terminal
 ```
 
-This runs Next.js and the Convex dev watcher together in one terminal. Open [http://localhost:3000](http://localhost:3000) to see the landing page.
+| Script | Qué hace |
+|---|---|
+| `npm test` / `npm run test:coverage` | Tests de Node (con cobertura de `lib/` y `/v1`) |
+| `npm run test:db` | Tests de las migraciones (pytest) |
+| `npm run db:migrate` | Aplica las migraciones pendientes |
+| `npm run worker` | Arranca el worker |
+| `infra/deploy.sh` | Despliega en la VPS |
 
-> **Tip:** If you need to run them separately for any reason, use `npm run dev` and `npx convex dev` in two terminals.
+## Documentación
 
-## Available Scripts
+- [`docs/decisions/`](docs/decisions/README.md): decisiones de arquitectura (ADR 001–015) y calendario.
+- [`docs/progreso/`](docs/progreso/README.md): diario de lo hecho en cada fase y por qué, con la evidencia de los tests.
+- [`docs/archive/`](docs/archive/): documentos del prototipo inicial.
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev:all` | Start Next.js + Convex dev watcher in a single terminal |
-| `npm run dev` | Start only the Next.js development server |
-| `npm run build` | Create a production build |
-| `npm run start` | Serve the production build |
-| `npm run lint` | Run ESLint |
+## Licencia
 
-## Project Structure
-
-```
-.
-├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── page.tsx            # Landing page
-│   │   ├── layout.tsx          # Root layout (Clerk + Convex providers)
-│   │   ├── auth-callback/      # Post-login redirect
-│   │   ├── dashboard/[userId]/ # Merchant dashboard
-│   │   └── widget/             # Payment checkout (loaded in iframe)
-│   └── components/
-│       ├── landing/            # Landing page sections (Hero, Features, etc.)
-│       └── dashboard/          # Dashboard components (CreateButtonForm, ButtonList, etc.)
-├── convex/
-│   ├── schema.ts               # Database schema (users, buttons, payments)
-│   ├── payments.ts             # Queries and mutations
-│   ├── crons.ts                # Scheduled jobs (payment confirmation polling)
-│   └── blockchain/             # Blockchain interaction (pollReceipt, checkPendingPayments)
-├── lib/
-│   └── usdc/                   # USDC contract address and ABI (Base Sepolia)
-├── public/
-│   ├── button.js               # Embeddable payment button script
-│   (test page moved to test/manual/test-button.html)
-├── docs/                       # Project documentation and memos
-├── .env.example                # Required environment variables
-└── package.json
-```
-
-## Architecture Overview
-
-Instanta follows a **non-custodial** model — funds flow directly from the buyer's wallet to the merchant's wallet. The platform never holds or touches any funds.
-
-**Key architectural decisions:**
-
-- **Security**: Payment details (amount, destination address) are stored server-side in Convex. The embeddable `button.js` only exposes a `buttonId` — no sensitive data is in the frontend HTML.
-- **Real-time updates**: Convex reactive queries automatically sync payment status changes to the checkout UI without manual polling or WebSockets.
-- **Blockchain confirmation**: A Convex cron job runs every 5 seconds, checking pending payments against `eth_getTransactionReceipt` on Base Sepolia.
-- **Iframe isolation**: The checkout widget runs inside an iframe for security — isolated from the host page's JavaScript.
-
-## Documentation
-
-Detailed project documentation is available in the `docs/` directory:
-
-- [`Plan_estrategico.md`](docs/archive/Plan_estrategico.md) — Strategic plan, competitive analysis, and product vision
-- [`project_memo.md`](docs/archive/project_memo.md) — Phase 1 development: architecture, security fix, and core payment flow
-- [`project_memo_2.md`](docs/archive/project_memo_2.md) — Phase 2 development: landing page, dashboard, and user experience
-- [`decisions/001-dev-workflow-no-docker.md`](docs/decisions/001-dev-workflow-no-docker.md) — ADR: why concurrently instead of Docker for dev workflow
-
-## License
-
-This project is part of an academic thesis (TFG). All rights reserved.
+Proyecto académico (TFG). Todos los derechos reservados.
