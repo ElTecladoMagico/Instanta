@@ -6,8 +6,10 @@ const isDashboard = createRouteMatcher(["/dashboard(.*)"]);
 export default clerkMiddleware(async (auth, request) => {
   if (!isDashboard(request)) return;
   const { userId, redirectToSignIn } = await auth();
-  // Sin sesión: al login de Clerk, y de vuelta al dashboard después.
-  if (!userId) return redirectToSignIn({ returnBackUrl: request.url });
+  // Sin sesión: al login de Clerk, y de vuelta al dashboard después. La URL de vuelta se construye con la
+  // dirección pública: detrás de Caddy, request.url lleva la interna del contenedor (0.0.0.0:3000).
+  const publicUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, process.env.NEXT_PUBLIC_APP_URL ?? request.url);
+  if (!userId) return redirectToSignIn({ returnBackUrl: publicUrl.toString() });
 });
 
 export const config = {
