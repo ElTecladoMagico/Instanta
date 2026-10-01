@@ -20,6 +20,7 @@ export async function startFakeNode() {
   let head = "0xffffffff"; // por defecto, muchísimas confirmaciones
   let down = false;
   let blockscoutDown = false;
+  const hiddenBlocks = new Set<string>(); // simula un nodo que aún no tiene el bloque
 
   const server = createServer((req, res) => {
     let body = "";
@@ -32,7 +33,7 @@ export async function startFakeNode() {
       const result =
         method === "eth_getTransactionByHash" ? (fixture?.transaction ?? null)
         : method === "eth_getTransactionReceipt" ? (fixture?.receipt ?? null)
-        : method === "eth_getBlockByNumber" ? (blocks.get(params[0]) ?? null)
+        : method === "eth_getBlockByNumber" ? (hiddenBlocks.has(params[0]) ? null : (blocks.get(params[0]) ?? null))
         : method === "eth_blockNumber" ? head
         : null;
       res.writeHead(200, { "content-type": "application/json" });
@@ -62,6 +63,9 @@ export async function startFakeNode() {
     setConfirmations: (fixture: Fixture, n: number) => (head = "0x" + (BigInt(fixture.block.number) + BigInt(n - 1)).toString(16)),
     setDown: (value: boolean) => (down = value),
     setBlockscoutDown: (value: boolean) => (blockscoutDown = value),
+    // El nodo devuelve el recibo pero todavía no el bloque (pasa con nodos públicos balanceados).
+    hideBlock: (fixture: Fixture, hidden: boolean) =>
+      hidden ? hiddenBlocks.add(fixture.block.number) : hiddenBlocks.delete(fixture.block.number),
     close: () => server.close(),
   };
 }

@@ -178,3 +178,15 @@ test("un pago directo en ETH no necesita Blockscout", async () => {
     node.setBlockscoutDown(false);
   }
 });
+
+test("si el nodo da el recibo pero aún no el bloque → sigue en processing y no lanza error", async () => {
+  node.setConfirmations(usdc, 5);
+  const intent = await processingIntent();
+  node.hideBlock(usdc, true);
+  try {
+    assert.equal((await checkPayment(intent)).status, "processing");
+  } finally {
+    node.hideBlock(usdc, false);
+  }
+  assert.equal((await checkPayment(intent)).status, "succeeded"); // en cuanto el bloque aparece
+});
