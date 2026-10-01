@@ -6,6 +6,7 @@ import { numeric, sql } from "./db.ts";
 import { newId, sha256 } from "./ids.ts";
 import { network } from "./chains.ts";
 import type { Auth } from "./api-keys.ts";
+import { recordEvent } from "./events.ts";
 
 const STATUSES = ["requires_payment", "processing", "succeeded", "failed", "canceled", "expired"] as const;
 
@@ -31,6 +32,7 @@ export const ListParams = z.object({
 
 export type Row = {
   id: string;
+  merchant_id: string;
   livemode: boolean;
   amount: bigint;
   amount_received: bigint;
@@ -101,16 +103,23 @@ export async function createPaymentIntent(auth: Auth, params: z.infer<typeof Cre
   return row ? { row, clientSecret } : null;
 }
 
-// Caducidad perezosa (ADR-007): antes de leer, los pagos sin pagar que pasaron de expires_at pasan a expired.
-async function expireOverdue(auth: Auth) {
-  await sql`
-    UPDATE payment_intents SET status = 'expired'
-    WHERE merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
-      AND status = 'requires_payment' AND expires_at < now()`;
+// Caducidad perezosa (ADR-007): antes de leer, los pagos sin pagar que pasaron de expires_at pasan a expired,
+// cada uno con su evento en la misma transacción (ADR-009). El alcance es un comercio y modo, o un checkout.
+export async function expirePayments(scope: Auth | { clientSecretHash: string }) {
+  await sql.begin(async (tx) => {
+    const rows = await tx<Row[]>`
+      UPDATE payment_intents SET status = 'expired'
+      WHERE ${"clientSecretHash" in scope
+          ? tx`client_secret_hash = ${scope.clientSecretHash}`
+          : tx`merchant_id = ${scope.merchantId} AND livemode = ${scope.livemode}`}
+        AND status = 'requires_payment' AND expires_at < now()
+      RETURNING *`;
+    for (const row of rows) await recordEvent(tx, row, "payment_intent.expired");
+  });
 }
 
 export async function getPaymentIntent(auth: Auth, id: string): Promise<Row | null> {
-  await expireOverdue(auth);
+  await expirePayments(auth);
   const [row] = await sql<Row[]>`
     SELECT * FROM payment_intents
     WHERE id = ${id} AND merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}`;
@@ -120,7 +129,7 @@ export async function getPaymentIntent(auth: Auth, id: string): Promise<Row | nu
 // Más recientes primero. Paginación por cursor: starting_after es el último id de la página anterior.
 // Se pide un elemento de más para saber si hay otra página (has_more).
 export async function listPaymentIntents(auth: Auth, params: z.infer<typeof ListParams>) {
-  await expireOverdue(auth);
+  await expirePayments(auth);
   const rows = await sql<Row[]>`
     SELECT * FROM payment_intents
     WHERE merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
@@ -139,12 +148,16 @@ export async function listPaymentIntents(auth: Auth, params: z.infer<typeof List
 // Solo se puede cancelar un pago en requires_payment. El UPDATE con la condición de estado
 // es la transición de ADR-007: si otro proceso ya lo cambió, no se toca.
 export async function cancelPaymentIntent(auth: Auth, id: string): Promise<Row | "not_found" | "unexpected_state"> {
-  await expireOverdue(auth);
-  const [row] = await sql<Row[]>`
-    UPDATE payment_intents SET status = 'canceled'
-    WHERE id = ${id} AND merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
-      AND status = 'requires_payment'
-    RETURNING *`;
+  await expirePayments(auth);
+  const row = await sql.begin(async (tx) => {
+    const [canceled] = await tx<Row[]>`
+      UPDATE payment_intents SET status = 'canceled'
+      WHERE id = ${id} AND merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
+        AND status = 'requires_payment'
+      RETURNING *`;
+    if (canceled) await recordEvent(tx, canceled, "payment_intent.canceled");
+    return canceled;
+  });
   if (row) return row;
   return (await getPaymentIntent(auth, id)) ? "unexpected_state" : "not_found";
 }

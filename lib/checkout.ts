@@ -4,7 +4,7 @@ import { z } from "zod";
 import { sql } from "./db.ts";
 import { sha256 } from "./ids.ts";
 import { checkPayment } from "./settle.ts";
-import type { Row } from "./payment-intents.ts";
+import { expirePayments, type Row } from "./payment-intents.ts";
 
 // Solo se lee tx_hash; cualquier otro campo (importe, destino…) se ignora (ADR-004, T5).
 export const SubmitParams = z.object({
@@ -34,10 +34,7 @@ export function toSession(row: CheckoutRow) {
 
 async function findBySecret(clientSecret: string): Promise<CheckoutRow | null> {
   const hash = sha256(clientSecret);
-  // Caducidad perezosa (ADR-007), igual que en la API del comercio.
-  await sql`
-    UPDATE payment_intents SET status = 'expired'
-    WHERE client_secret_hash = ${hash} AND status = 'requires_payment' AND expires_at < now()`;
+  await expirePayments({ clientSecretHash: hash }); // caducidad perezosa, igual que en la API del comercio
   const [row] = await sql<CheckoutRow[]>`
     SELECT pi.*, m.name AS merchant_name
     FROM payment_intents pi JOIN merchants m ON m.id = pi.merchant_id

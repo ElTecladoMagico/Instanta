@@ -7,6 +7,7 @@ import { rpc } from "./rpc.ts";
 import { internalTransfers, type InternalTransfer } from "./blockscout.ts";
 import { verify, type ChainTx } from "./verify.ts";
 import type { Row } from "./payment-intents.ts";
+import { recordEvent } from "./events.ts";
 
 type Receipt = ChainTx["receipt"] & { blockNumber: string };
 
@@ -65,15 +66,20 @@ export async function checkPayment(row: Row): Promise<Row> {
   const blockAge = Date.now() / 1000 - Number(BigInt(chainTx.block.timestamp));
   if (verdict.status === "failed" && chainTx.internalTransfers && blockAge < INDEXING_GRACE_SECONDS) return row;
 
-  // 3. Guardar. La condición de estado evita pisar un cambio hecho por otro proceso.
-  const [updated] = await sql<Row[]>`
-    UPDATE payment_intents
-    SET status = ${verdict.status},
-        amount_received = ${numeric(verdict.amountReceived)},
-        failure_code = ${verdict.status === "failed" ? verdict.code : null},
-        succeeded_at = ${verdict.status === "succeeded" ? sql`now()` : null}
-    WHERE id = ${row.id} AND status = 'processing'
-    RETURNING *`;
+  // 3. Guardar el resultado y su evento en la misma transacción (ADR-009). La condición de estado
+  //    evita pisar un cambio hecho por otro proceso: si dos procesos verifican a la vez, solo uno escribe.
+  const updated = await sql.begin(async (tx) => {
+    const [changed] = await tx<Row[]>`
+      UPDATE payment_intents
+      SET status = ${verdict.status},
+          amount_received = ${numeric(verdict.amountReceived)},
+          failure_code = ${verdict.status === "failed" ? verdict.code : null},
+          succeeded_at = ${verdict.status === "succeeded" ? tx`now()` : null}
+      WHERE id = ${row.id} AND status = 'processing'
+      RETURNING *`;
+    if (changed) await recordEvent(tx, changed, `payment_intent.${verdict.status}`);
+    return changed;
+  });
   if (updated) return updated;
   const [current] = await sql<Row[]>`SELECT * FROM payment_intents WHERE id = ${row.id}`;
   return current;
