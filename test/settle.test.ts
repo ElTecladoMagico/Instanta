@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { numeric, sql } from "../lib/db.ts";
 import { newId } from "../lib/ids.ts";
 import { checkPayment } from "../lib/settle.ts";
+import type { Row } from "../lib/payment-intents.ts";
 import { loadFixture, randomTxHash, startFakeNode } from "./helpers/fake-node.ts";
 
 const usdc = loadFixture("usdc-transfer"); // 1000 unidades de USDC a 0xb733…2810
@@ -29,7 +30,7 @@ async function processingIntent({ payTo = RECIPIENT, amount = 1000n, fixture = u
   const txHash = randomTxHash();
   node.serve(txHash, fixture);
   const createdAt = new Date((Number(BigInt(usdc.block.timestamp)) - 60) * 1000);
-  const [row] = await sql`
+  const [row] = await sql<Row[]>`
     INSERT INTO payment_intents (id, merchant_id, livemode, amount, currency, chain_id, token_address, pay_to,
                                  status, tx_hash, client_secret_hash, created_at, expires_at)
     VALUES (${newId("pi")}, ${merchant}, false, ${numeric(amount)}, 'usdc', 84532, ${USDC}, ${payTo},
@@ -76,7 +77,7 @@ test("transacción revertida → failed reverted", async () => {
 test("transacción que el nodo aún no conoce (no minada) → sigue en processing", async () => {
   const intent = await processingIntent();
   await sql`UPDATE payment_intents SET tx_hash = ${randomTxHash()} WHERE id = ${intent.id}`;
-  const [row] = await sql`SELECT * FROM payment_intents WHERE id = ${intent.id}`;
+  const [row] = await sql<Row[]>`SELECT * FROM payment_intents WHERE id = ${intent.id}`;
   assert.equal((await checkPayment(row)).status, "processing");
 });
 
