@@ -80,17 +80,18 @@ export function toApi(row: Row, clientSecret: string | null = null) {
 }
 
 // Crea el pago con la cartera, la red y el token que fija el servidor.
+// paymentLinkId: el enlace de pago del que sale, si lo crea el botón embebible (ADR-010).
 // Devuelve null si el comercio aún no tiene cartera de cobro.
-export async function createPaymentIntent(auth: Auth, params: z.infer<typeof CreateParams>) {
+export async function createPaymentIntent(auth: Auth, params: z.infer<typeof CreateParams>, paymentLinkId: string | null = null) {
   const id = newId("pi");
   const clientSecret = `${id}_secret_${randomBytes(16).toString("hex")}`;
   const { chainId, usdc } = network(auth.livemode);
   // INSERT … SELECT: si el comercio no tiene payout_address, no se inserta nada.
   const [row] = await sql<Row[]>`
     INSERT INTO payment_intents
-      (id, merchant_id, livemode, amount, currency, chain_id, token_address, pay_to,
+      (id, merchant_id, payment_link_id, livemode, amount, currency, chain_id, token_address, pay_to,
        client_secret_hash, description, metadata, return_url, expires_at)
-    SELECT ${id}, id, ${auth.livemode}, ${numeric(BigInt(params.amount))}, ${params.currency}, ${chainId},
+    SELECT ${id}, id, ${paymentLinkId}, ${auth.livemode}, ${numeric(BigInt(params.amount))}, ${params.currency}, ${chainId},
            ${params.currency === "usdc" ? usdc : null}, payout_address,
            ${sha256(clientSecret)}, ${params.description ?? null}, ${sql.json(params.metadata ?? {})},
            ${params.return_url ?? null}, now() + make_interval(secs => ${params.expires_in ?? 3600})
