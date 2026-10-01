@@ -1,6 +1,14 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+// El dashboard exige sesión de Clerk (ADR-006). La API /v1 usa API keys y la página /pay es pública.
+const isDashboard = createRouteMatcher(["/dashboard(.*)"]);
+
+export default clerkMiddleware(async (auth, request) => {
+  if (!isDashboard(request)) return;
+  const { userId, redirectToSignIn } = await auth();
+  // Sin sesión: al login de Clerk, y de vuelta al dashboard después.
+  if (!userId) return redirectToSignIn({ returnBackUrl: request.url });
+});
 
 export const config = {
   matcher: [
