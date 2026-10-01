@@ -57,7 +57,7 @@ export function Navbar() {
             <SignedIn>
               {user && (
                 <Link
-                  href={`/dashboard/${user.id}`}
+                  href="/dashboard"
                   className="text-primary hover:bg-primary-container font-medium text-sm px-4 py-2 rounded-full transition-all duration-200 mr-2"
                 >
                   Dashboard
@@ -109,7 +109,7 @@ export function Navbar() {
               <SignedIn>
                 {user && (
                   <Link
-                    href={`/dashboard/${user.id}`}
+                    href="/dashboard"
                     onClick={() => setMobileOpen(false)}
                     className="block w-full text-center bg-primary hover:bg-primary-light text-white px-5 py-3 rounded-full text-sm font-medium transition-all duration-200 shadow-md"
                   >

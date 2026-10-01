@@ -11,7 +11,7 @@ export default function AuthCallback() {
     useEffect(() => {
         if (isLoaded) {
             if (user) {
-                router.push(`/dashboard/${user.id}`);
+                router.push("/dashboard");
             } else {
                 router.push('/');
             }
