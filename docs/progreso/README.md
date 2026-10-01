@@ -16,3 +16,4 @@ Cada entrada sigue la misma estructura: **qué se hizo**, **por qué**, **cómo*
 | 07 | [Verificación on-chain: `verify()`](07-verify.md) | 30/09/2026 | 4 |
 | 08 | [Mapa de la arquitectura: piezas, conexiones, Caddy y túneles](08-arquitectura.md) | 30/09/2026 | — |
 | 09 | [API keys y API de pagos (`/v1/payment_intents`)](09-api-pagos.md) | 30/09/2026 | 5 |
+| 10 | [Checkout, payment links y primeras pruebas E2E con pagos reales](10-checkout.md) | 01/10/2026 | 6 |
