@@ -1,19 +1,18 @@
 (function() {
-    // Derive the widget URL from wherever this script was loaded from.
-    // e.g. if loaded from https://instanta.vercel.app/button.js → widget is https://instanta.vercel.app/widget
+    // Instanta's API lives wherever this script was loaded from
+    // (e.g. https://instanta.scuda.es/button.js → https://instanta.scuda.es).
     const scriptSrc = document.currentScript && document.currentScript.src;
-    const WIDGET_URL = scriptSrc
-      ? new URL('/widget', scriptSrc).href
-      : '/widget';
-    
+    const ORIGIN = scriptSrc ? new URL(scriptSrc).origin : window.location.origin;
+
+    // Usage: <button data-instanta-link="pl_…">Pay</button>
     function initializePayButtons() {
-      const payButtons = document.querySelectorAll('[data-instanta-button-id]');
-      
+      const payButtons = document.querySelectorAll('[data-instanta-link]');
+
       payButtons.forEach(button => {
-        const buttonId = button.getAttribute('data-instanta-button-id');
-        
-        if (!buttonId) {
-          console.error('[Instanta] Button is missing the data-instanta-button-id attribute.');
+        const linkId = button.getAttribute('data-instanta-link');
+
+        if (!linkId) {
+          console.error('[Instanta] Button is missing the data-instanta-link attribute.');
           return;
         }
         
@@ -43,8 +42,7 @@
         // Add the click handler that opens the modal
         button.addEventListener('click', (e) => {
           e.preventDefault(); // Prevent default button behavior
-          // Pass only the secure buttonId to the modal function
-          openPaymentModal(buttonId);
+          openPaymentModal(linkId);
         });
         /*************************** Basic Button Styles ***************************/
 
@@ -53,16 +51,19 @@
     
     /*************************** iFrame Widget with Styles ***************************/
     // This function opens the payment modal
-    function openPaymentModal(buttonId) {
-      // Generate a unique payment ID for this payment attempt
-      const paymentId = 'pay_' + Math.random().toString(36).slice(2, 11);
-      
-      // Construct the widget URL with only the secure parameters
-      const widgetUrl = `${WIDGET_URL}?` + new URLSearchParams({
-        buttonId: buttonId, // The secure ID of the button
-        paymentId: paymentId  // The temporary ID for this specific transaction
-      }).toString();
-      
+    async function openPaymentModal(linkId) {
+      // The server creates the payment from the stored link (amount and wallet never come
+      // from this page) and returns the checkout URL (ADR-010).
+      let widgetUrl;
+      try {
+        const res = await fetch(`${ORIGIN}/v1/payment_links/${encodeURIComponent(linkId)}/checkout`, { method: 'POST' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        widgetUrl = (await res.json()).checkout_url;
+      } catch (err) {
+        console.error('[Instanta] Could not start the payment:', err);
+        return;
+      }
+
       // Create the overlay (dark semi-transparent background)
       const overlay = document.createElement('div');
       overlay.id = 'Instanta-overlay';
