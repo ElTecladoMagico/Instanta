@@ -56,7 +56,7 @@ export function Hero() {
 
           <SignedIn>
             {user && (
-              <Link href={`/dashboard/${user.id}`}>
+              <Link href="/dashboard">
                 <button className="w-full sm:w-auto px-8 py-4 bg-primary hover:bg-primary-light text-white rounded-full font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group">
                   Go to Dashboard
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
