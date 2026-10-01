@@ -1,7 +1,7 @@
 # ADR-010: Checkout alojado y botón embebible sobre PaymentIntents
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Propuesta  
+**Estado:** Aceptada (01/10/2026, validada con pagos reales en Base Sepolia)  
 **Contexto:** El checkout actual depende de Convex, genera el id del pago en el navegador y cobra en ETH
 
 ---

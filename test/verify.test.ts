@@ -162,8 +162,7 @@ test("ETH desde una cuenta inteligente pagando de menos → failed amount_mismat
 });
 
 test("sin transferencias internas (Blockscout no consultado) se comporta como antes → wrong_recipient", () => {
-  const { internalTransfers: _ignored, ...withoutInternal } = eth7702Tx;
-  assert.equal(verify(eth7702Intent, withoutInternal, ENOUGH, REQUIRED).status, "failed");
+  assert.equal(verify(eth7702Intent, { ...eth7702Tx, internalTransfers: undefined }, ENOUGH, REQUIRED).status, "failed");
 });
 
 test("una llamada interna que falló o que es delegatecall no cuenta como pago", () => {
@@ -173,4 +172,17 @@ test("una llamada interna que falló o que es delegatecall no cuenta como pago",
   });
   assert.equal(verify(eth7702Intent, modified({ success: false }), ENOUGH, REQUIRED).status, "failed");
   assert.equal(verify(eth7702Intent, modified({ type: "delegatecall" }), ENOUGH, REQUIRED).status, "failed");
+});
+
+// ── Pagos E2E reales de la fase 6 (MetaMask, cuenta inteligente, Base Sepolia) ──
+// Los dos van dirigidos a un contrato (0xdb9b…) con value 0: el ETH viaja en una llamada interna
+// y el USDC en el evento Transfer del contrato del token.
+test("E2E real: 0,0001 ETH desde MetaMask (cuenta inteligente) → succeeded", () => {
+  const intent: Intent = { ...eth7702Intent, createdAt: 1790851204 - 60 };
+  assert.deepEqual(verify(intent, fixture("e2e-eth"), ENOUGH, REQUIRED), { status: "succeeded", amountReceived: 100_000_000_000_000n });
+});
+
+test("E2E real: 0,01 USDC desde MetaMask (cuenta inteligente) → succeeded", () => {
+  const intent: Intent = { currency: "usdc", amount: 10_000n, payTo: eth7702Intent.payTo, tokenAddress: USDC, createdAt: 1790851226 - 60 };
+  assert.deepEqual(verify(intent, fixture("e2e-usdc"), ENOUGH, REQUIRED), { status: "succeeded", amountReceived: 10_000n });
 });

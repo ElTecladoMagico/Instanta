@@ -30,9 +30,12 @@ export async function checkPayment(row: Row): Promise<Row> {
     ]);
     if (!transaction || !receipt) return row;
     const [block, head] = await Promise.all([
-      rpc<ChainTx["block"]>(url, "eth_getBlockByNumber", [receipt.blockNumber, false]),
+      rpc<ChainTx["block"] | null>(url, "eth_getBlockByNumber", [receipt.blockNumber, false]),
       rpc<string>(url, "eth_blockNumber", []),
     ]);
+    // Los nodos públicos reparten las peticiones entre varios servidores y alguno puede ir un bloque
+    // por detrás: tener el recibo no garantiza tener ya el bloque. Se vuelve a intentar más tarde.
+    if (!block) return row;
     // ETH que no va directo al comercio: puede venir de una cuenta inteligente (EIP-7702, Safe…)
     // en una llamada interna. Solo entonces se consulta Blockscout (ADR-015).
     let internal: InternalTransfer[] | undefined;

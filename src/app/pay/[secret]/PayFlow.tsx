@@ -71,10 +71,21 @@ export function PayFlow({ secret }: { secret: string }) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ tx_hash: txHash }),
     });
-    const body = await res.json();
-    if (!res.ok) throw new Error(body.error?.message ?? "Could not register the payment.");
-    setUnsentHash(null);
-    setSession(body);
+    const body = await res.json().catch(() => null);
+    if (res.ok && body) {
+      setUnsentHash(null);
+      setSession(body);
+      return;
+    }
+    // La respuesta falló, pero puede que el servidor sí guardara la transacción: se consulta el estado
+    // y, si ya la tiene, se sigue como si nada (reintentar daría 409 porque el pago ya no está pendiente).
+    const current = await fetch(`/v1/checkout/${secret}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    if (current?.tx_hash === txHash.toLowerCase()) {
+      setUnsentHash(null);
+      setSession(current);
+      return;
+    }
+    throw new Error(body?.error?.message ?? "Could not register the payment.");
   }
 
   async function pay() {

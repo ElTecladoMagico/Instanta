@@ -11,7 +11,7 @@
 | [007](007-dinero-y-maquina-de-estados.md) | Dinero como entero y máquina de estados en SQL | Aceptada |
 | [008](008-verificacion-on-chain.md) | Verificación on-chain como función pura, asociación por `tx_hash` | Aceptada |
 | [009](009-webhooks-outbox.md) | Webhooks con outbox en Postgres y firma HMAC | Propuesta |
-| [010](010-checkout-y-boton-embebible.md) | Checkout alojado único; el botón crea un PaymentIntent | Propuesta |
+| [010](010-checkout-y-boton-embebible.md) | Checkout alojado único; el botón crea un PaymentIntent | Aceptada |
 | [011](011-tests-y-ci.md) | Tests con `node:test` y CI en GitHub Actions | Aceptada |
 | [012](012-alcance-del-producto.md) | Alcance del producto y trabajo futuro | Propuesta |
 | [013](013-eth-nativo-en-testnet.md) | Admitir ETH nativo además de USDC (pruebas en testnet) | Propuesta |
