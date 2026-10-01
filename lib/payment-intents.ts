@@ -29,7 +29,7 @@ export const ListParams = z.object({
   status: z.enum(STATUSES).optional(),
 });
 
-type Row = {
+export type Row = {
   id: string;
   livemode: boolean;
   amount: bigint;
