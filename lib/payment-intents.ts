@@ -105,13 +105,14 @@ export async function createPaymentIntent(auth: Auth, params: z.infer<typeof Cre
 }
 
 // Caducidad perezosa (ADR-007): antes de leer, los pagos sin pagar que pasaron de expires_at pasan a expired,
-// cada uno con su evento en la misma transacción (ADR-009). El alcance es un comercio y modo, o un checkout.
-export async function expirePayments(scope: Auth | { clientSecretHash: string }) {
+// cada uno con su evento en la misma transacción (ADR-009). El alcance es un comercio y modo, un checkout
+// o todos los pagos ("all", lo usa el worker).
+export async function expirePayments(scope: Auth | { clientSecretHash: string } | "all") {
   await sql.begin(async (tx) => {
     const rows = await tx<Row[]>`
       UPDATE payment_intents SET status = 'expired'
-      WHERE ${"clientSecretHash" in scope
-          ? tx`client_secret_hash = ${scope.clientSecretHash}`
+      WHERE ${scope === "all" ? tx`true`
+          : "clientSecretHash" in scope ? tx`client_secret_hash = ${scope.clientSecretHash}`
           : tx`merchant_id = ${scope.merchantId} AND livemode = ${scope.livemode}`}
         AND status = 'requires_payment' AND expires_at < now()
       RETURNING *`;
