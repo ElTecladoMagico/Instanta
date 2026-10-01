@@ -102,3 +102,10 @@ test("resendEvent vuelve a poner en cola un aviso fallido (solo propio y solo si
   assert.deepEqual({ ...event }, { delivery_status: "pending", attempts: 0, due: true });
   assert.equal(await resendEvent(auth, id), false); // ya está pendiente
 });
+
+test("updateProfile con el nombre vacío lo deja sin nombre (el checkout mostrará \"Instanta\")", async () => {
+  const merchant = await ensureMerchant(clerkId(), "n@example.com");
+  await updateProfile(merchant.id, { name: "   ", payoutAddress: "0xAE76BEEdd8DD39878D22E1b7a8Ff96e5c5e8B17b" });
+  const [row] = await sql`SELECT name FROM merchants WHERE id = ${merchant.id}`;
+  assert.equal(row.name, null);
+});
