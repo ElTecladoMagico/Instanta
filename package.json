@@ -10,9 +10,9 @@
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "uv run -q --python 3.13 --with-requirements db/requirements.txt alembic -c db/alembic.ini upgrade head",
-    "test": "node --test \"test/**/*.test.ts\"",
+    "test": "node --test --test-concurrency=1 \"test/**/*.test.ts\"",
     "test:db": "uv run -q --python 3.13 --with-requirements db/requirements-dev.txt pytest -q db/tests",
-    "test:coverage": "node --test --experimental-test-coverage --test-coverage-include=\"lib/**\" --test-coverage-include=\"src/app/v1/**\" \"test/**/*.test.ts\""
+    "test:coverage": "node --test --test-concurrency=1 --experimental-test-coverage --test-coverage-include=\"lib/**\" --test-coverage-include=\"src/app/v1/**\" \"test/**/*.test.ts\""
   },
   "dependencies": {
     "@clerk/nextjs": "^6.35.1",
