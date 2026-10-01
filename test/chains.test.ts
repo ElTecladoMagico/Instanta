@@ -9,6 +9,8 @@ test("test → Base Sepolia, 2 confirmaciones y nodo público por defecto", () =
   assert.equal(net.chainId, 84532);
   assert.equal(net.confirmations, 2);
   assert.equal(net.rpcUrl(), "https://sepolia.base.org");
+  delete process.env.BASE_SEPOLIA_BLOCKSCOUT_URL;
+  assert.equal(net.blockscoutUrl(), "https://base-sepolia.blockscout.com");
 });
 
 test("live → Base, 10 confirmaciones y nodo público por defecto", () => {
@@ -17,4 +19,6 @@ test("live → Base, 10 confirmaciones y nodo público por defecto", () => {
   assert.equal(net.chainId, 8453);
   assert.equal(net.confirmations, 10);
   assert.equal(net.rpcUrl(), "https://mainnet.base.org");
+  delete process.env.BASE_BLOCKSCOUT_URL;
+  assert.equal(net.blockscoutUrl(), "https://base.blockscout.com");
 });
