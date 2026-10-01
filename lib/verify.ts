@@ -1,5 +1,6 @@
-// Decide si una transacción de la blockchain paga un pago (ADR-008, ADR-013).
+// Decide si una transacción de la blockchain paga un pago (ADR-008, ADR-013, ADR-015).
 // Función pura: no llama a la red ni a la base de datos. Recibe los datos tal como los devuelve el nodo.
+import type { InternalTransfer } from "./blockscout.ts";
 
 export type Intent = {
   currency: "usdc" | "eth";
@@ -14,6 +15,8 @@ export type ChainTx = {
   transaction: { to: string | null; value: string };
   receipt: { status: string; logs: { address: string; topics: string[]; data: string }[] };
   block: { timestamp: string };
+  // Transferencias internas según Blockscout (ADR-015). Solo se piden para ETH cuando tx.to no es el comercio.
+  internalTransfers?: InternalTransfer[];
 };
 
 export type FailureCode = "reverted" | "wrong_recipient" | "wrong_token" | "amount_mismatch" | "tx_too_old";
@@ -48,9 +51,14 @@ export function verify(intent: Intent, tx: ChainTx, confirmations: number, requi
   return { status: "succeeded", amountReceived: received };
 }
 
-// ETH: la propia transacción lleva el destinatario (to) y el importe (value).
+// ETH: el pago puede ir en la propia transacción (to + value) o, si sale de una cuenta inteligente
+// (EIP-7702, Safe…), en llamadas internas con valor hacia el comercio (ADR-015). Se suma todo lo que llega.
+// Solo cuentan las llamadas "call" que tuvieron éxito: un delegatecall no mueve ETH a otra cuenta.
 function receivedEth(intent: Intent, tx: ChainTx): bigint | "wrong_recipient" {
-  return sameAddress(tx.transaction.to, intent.payTo) ? BigInt(tx.transaction.value) : "wrong_recipient";
+  const direct = sameAddress(tx.transaction.to, intent.payTo) ? BigInt(tx.transaction.value) : null;
+  const internal = (tx.internalTransfers ?? []).filter((t) => t.type === "call" && t.success && sameAddress(t.to, intent.payTo));
+  if (direct === null && internal.length === 0) return "wrong_recipient";
+  return (direct ?? 0n) + internal.reduce((sum, t) => sum + BigInt(t.value), 0n);
 }
 
 // Token ERC-20: se suman los eventos Transfer hacia el comercio emitidos por el contrato del token.

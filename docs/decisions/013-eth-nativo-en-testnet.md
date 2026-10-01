@@ -51,6 +51,8 @@ Las reglas de antigüedad del bloque, confirmaciones y `UNIQUE(tx_hash)` son las
 
 ## Limitación
 
+> **Actualización (01/10/2026):** esta limitación resultó ser el comportamiento por defecto de MetaMask (cuentas EIP-7702). Se resolvió en [ADR-015](015-eth-desde-cuentas-inteligentes.md).
+
 Con ETH solo se detectan **transferencias directas** desde la cartera del comprador. Si el ETH llegara a través de un contrato (una *internal transaction*), no aparece en `tx.to`/`tx.value` y el pago se marcaría como fallido. El checkout siempre hace transferencias directas, así que no afecta al flujo normal; se documenta como limitación.
 
 ## Decisión

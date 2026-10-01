@@ -16,6 +16,7 @@
 | [012](012-alcance-del-producto.md) | Alcance del producto y trabajo futuro | Propuesta |
 | [013](013-eth-nativo-en-testnet.md) | Admitir ETH nativo además de USDC (pruebas en testnet) | Propuesta |
 | [014](014-migraciones-con-alembic.md) | Migraciones con Alembic (SQL a mano) en vez del script propio | Aceptada |
+| [015](015-eth-desde-cuentas-inteligentes.md) | Pagos en ETH desde cuentas inteligentes (EIP-7702) vía transferencias internas de Blockscout | Aceptada |
 
 ## Orden de implementación
 

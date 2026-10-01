@@ -128,3 +128,49 @@ test("pago correcto con menos confirmaciones de las exigidas → processing", ()
 test("con justo las confirmaciones exigidas → succeeded", () => {
   assert.equal(verify(usdcIntent, usdcTx, REQUIRED, REQUIRED).status, "succeeded");
 });
+
+// ── ETH desde cuentas inteligentes (EIP-7702, ADR-015) ──────────────────────
+// eth-7702: pago real de la prueba E2E. MetaMask lo envió como transacción tipo 0x4 desde un relayer,
+// dirigida a un contrato y con value 0; los 0,0001 ETH se movieron en una llamada interna a 0xae76…b17b.
+const eth7702Tx = fixture("eth-7702");
+const eth7702Intent: Intent = {
+  currency: "eth",
+  amount: 100_000_000_000_000n,
+  payTo: "0xAE76BEEdd8DD39878D22E1b7a8Ff96e5c5e8B17b",
+  tokenAddress: null,
+  createdAt: 1790849960 - 60,
+};
+
+test("ETH desde una cuenta inteligente: cuenta la transferencia interna al comercio → succeeded", () => {
+  assert.deepEqual(verify(eth7702Intent, eth7702Tx, ENOUGH, REQUIRED), { status: "succeeded", amountReceived: 100_000_000_000_000n });
+});
+
+test("ETH desde una cuenta inteligente a otra dirección → failed wrong_recipient", () => {
+  assert.deepEqual(verify({ ...eth7702Intent, payTo: OTHER }, eth7702Tx, ENOUGH, REQUIRED), {
+    status: "failed",
+    code: "wrong_recipient",
+    amountReceived: 0n,
+  });
+});
+
+test("ETH desde una cuenta inteligente pagando de menos → failed amount_mismatch", () => {
+  assert.deepEqual(verify({ ...eth7702Intent, amount: 100_000_000_000_001n }, eth7702Tx, ENOUGH, REQUIRED), {
+    status: "failed",
+    code: "amount_mismatch",
+    amountReceived: 100_000_000_000_000n,
+  });
+});
+
+test("sin transferencias internas (Blockscout no consultado) se comporta como antes → wrong_recipient", () => {
+  const { internalTransfers: _ignored, ...withoutInternal } = eth7702Tx;
+  assert.equal(verify(eth7702Intent, withoutInternal, ENOUGH, REQUIRED).status, "failed");
+});
+
+test("una llamada interna que falló o que es delegatecall no cuenta como pago", () => {
+  const modified = (change: object) => ({
+    ...eth7702Tx,
+    internalTransfers: eth7702Tx.internalTransfers!.map((t) => (t.value === "100000000000000" ? { ...t, ...change } : t)),
+  });
+  assert.equal(verify(eth7702Intent, modified({ success: false }), ENOUGH, REQUIRED).status, "failed");
+  assert.equal(verify(eth7702Intent, modified({ type: "delegatecall" }), ENOUGH, REQUIRED).status, "failed");
+});
