@@ -96,3 +96,11 @@ test("un comercio no ve ni borra los endpoints de otro (ADR-004, T6)", async () 
   assert.equal((await remove(b, id)).status, 404);
   assert.equal((await (await list(a)).json()).data.length, 1);
 });
+
+test("crear con un cuerpo que no es JSON → 400", async () => {
+  const key = await merchantKey();
+  const res = await collection.POST(
+    new Request("http://localhost/v1/webhook_endpoints", { method: "POST", headers: { authorization: `Bearer ${key}` }, body: "no json" }),
+  );
+  assert.equal(res.status, 400);
+});
