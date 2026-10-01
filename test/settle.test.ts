@@ -190,3 +190,23 @@ test("si el nodo da el recibo pero aún no el bloque → sigue en processing y n
   }
   assert.equal((await checkPayment(intent)).status, "succeeded"); // en cuanto el bloque aparece
 });
+
+// ── Transacciones que nunca llegan a minarse ──
+async function unknownTxSubmitted(minutesAgo: number) {
+  const intent = await processingIntent();
+  await sql`UPDATE payment_intents SET tx_hash = ${randomTxHash()}, submitted_at = now() - make_interval(mins => ${minutesAgo})
+            WHERE id = ${intent.id}`;
+  return (await sql<Row[]>`SELECT * FROM payment_intents WHERE id = ${intent.id}`)[0];
+}
+
+test("transacción desconocida enviada hace poco → sigue en processing", async () => {
+  assert.equal((await checkPayment(await unknownTxSubmitted(5))).status, "processing");
+});
+
+test("transacción desconocida una hora después de enviarla → failed tx_not_found, con su evento", async () => {
+  const row = await checkPayment(await unknownTxSubmitted(61));
+  assert.equal(row.status, "failed");
+  assert.equal(row.failure_code, "tx_not_found");
+  const events = await sql`SELECT type FROM events WHERE data->'object'->>'id' = ${row.id}`;
+  assert.deepEqual(events.map((e) => e.type), ["payment_intent.failed"]);
+});
