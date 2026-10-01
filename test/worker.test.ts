@@ -43,6 +43,8 @@ beforeEach(async () => {
   received = [];
   // El worker actúa sobre toda la BD: se retiran los avisos pendientes que hayan dejado otros tests.
   await sql`UPDATE events SET delivery_status = 'failed' WHERE delivery_status = 'pending'`;
+  // Igual con los pagos en processing: el worker comprueba los 50 más antiguos de toda la BD.
+  await sql`UPDATE payment_intents SET status = 'failed', failure_code = 'tx_not_found' WHERE status = 'processing'`;
 });
 
 async function merchantWithEndpoint() {
