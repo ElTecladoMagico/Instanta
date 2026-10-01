@@ -101,3 +101,22 @@ test("un pago que no está en processing se devuelve tal cual, sin consultar al 
     node.setDown(false);
   }
 });
+
+test("si otro proceso ya cambió el pago, no se pisa: se devuelve el estado actual (ADR-007)", async () => {
+  node.setConfirmations(usdc, 5);
+  const stale = await processingIntent();
+  // Mientras tanto, otro proceso (el worker, otra petición) lo marca como fallido.
+  await sql`UPDATE payment_intents SET status = 'failed', failure_code = 'reverted' WHERE id = ${stale.id}`;
+  const row = await checkPayment(stale);
+  assert.equal(row.status, "failed");
+  assert.equal(row.failure_code, "reverted");
+});
+
+test("los pagos de live se comprueban contra el nodo de Base (BASE_RPC_URL)", async () => {
+  process.env.BASE_RPC_URL = node.url;
+  node.setConfirmations(usdc, 20); // live exige 10
+  const intent = await processingIntent();
+  await sql`UPDATE payment_intents SET livemode = true, chain_id = 8453 WHERE id = ${intent.id}`;
+  const row = await checkPayment({ ...intent, livemode: true, chain_id: 8453 });
+  assert.equal(row.status, "succeeded");
+});
