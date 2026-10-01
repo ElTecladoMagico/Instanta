@@ -1,7 +1,7 @@
 # ADR-006: Autenticación — Clerk para el dashboard, API keys propias para la API
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Propuesta  
+**Estado:** Aceptada (02/10/2026; el dashboard usa Server Actions con el comercio de la sesión, sin rutas /api/dashboard)  
 **Contexto:** Aparece un segundo tipo de cliente (el servidor del comercio) que no puede iniciar sesión en un navegador
 
 ---
