@@ -25,10 +25,10 @@ after(async () => {
 });
 
 // Un pago de 1000 unidades de USDC a la cartera del fixture, creado justo antes de su transacción real.
-async function newIntent({ expired = false } = {}) {
+async function newIntent({ expired = false, name = "Tienda de pruebas" as string | null } = {}) {
   const merchantId = newId("mer");
   await sql`INSERT INTO merchants (id, clerk_user_id, email, name, payout_address)
-            VALUES (${merchantId}, ${merchantId}, 'shop@example.com', 'Tienda de pruebas', ${RECIPIENT})`;
+            VALUES (${merchantId}, ${merchantId}, 'shop@example.com', ${name}, ${RECIPIENT})`;
   const auth = { merchantId, livemode: false };
   const created = await createPaymentIntent(auth, { amount: "1000", currency: "usdc", description: "Taza", metadata: { secret_note: "x" } });
   const createdAt = new Date((Number(BigInt(usdc.block.timestamp)) - 60) * 1000);
@@ -179,4 +179,9 @@ test("el cuerpo no puede cambiar el importe ni el destino: se ignoran (ADR-004, 
   await postSubmit(secret, { tx_hash: servedHash(), amount: "1", pay_to: "0x1111111111111111111111111111111111111111" });
   const [row] = await sql`SELECT amount, pay_to FROM payment_intents WHERE id = ${id}`;
   assert.deepEqual({ ...row }, { amount: 1000n, pay_to: RECIPIENT });
+});
+
+test("un comercio sin nombre aparece como Instanta en el checkout", async () => {
+  const { secret } = await newIntent({ name: null });
+  assert.equal((await (await getSession(secret)).json()).merchant_name, "Instanta");
 });
