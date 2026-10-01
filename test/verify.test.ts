@@ -162,8 +162,7 @@ test("ETH desde una cuenta inteligente pagando de menos → failed amount_mismat
 });
 
 test("sin transferencias internas (Blockscout no consultado) se comporta como antes → wrong_recipient", () => {
-  const { internalTransfers: _ignored, ...withoutInternal } = eth7702Tx;
-  assert.equal(verify(eth7702Intent, withoutInternal, ENOUGH, REQUIRED).status, "failed");
+  assert.equal(verify(eth7702Intent, { ...eth7702Tx, internalTransfers: undefined }, ENOUGH, REQUIRED).status, "failed");
 });
 
 test("una llamada interna que falló o que es delegatecall no cuenta como pago", () => {
