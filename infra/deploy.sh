@@ -9,5 +9,5 @@ rsync -az --delete \
   --exclude .cursor --exclude .claude \
   ./ instanta:/opt/instanta/
 
-ssh instanta 'cd /opt/instanta && docker compose --profile deploy up -d --build --remove-orphans && docker image prune -f >/dev/null'
+ssh instanta 'cd /opt/instanta && docker compose --profile deploy up -d --build --remove-orphans && docker compose restart caddy && docker image prune -f >/dev/null'
 curl -fsS "https://instanta.scuda.es/v1/health" && echo

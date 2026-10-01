@@ -59,6 +59,21 @@ services:
       migrate: { condition: service_completed_successfully }
     profiles: [deploy]
 
+  demo-store:
+    # Tienda de ejemplo (ADR-012): un "comercio" que se integra con Instanta como lo haría uno real.
+    # Su API key y su secreto de webhooks están en .env.demo, en la VPS (no en el repositorio).
+    image: node:24-alpine
+    working_dir: /app
+    command: ["node", "server.ts"]
+    volumes:
+      - ./examples/demo-store:/app:ro
+    env_file: .env.demo
+    environment:
+      PUBLIC_URL: https://${DOMAIN:-localhost}/demo
+      INSTANTA_API_URL: https://${DOMAIN:-localhost}
+    restart: unless-stopped
+    profiles: [deploy]
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
