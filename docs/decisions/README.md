@@ -6,11 +6,11 @@
 | [002](002-postgres-sql-en-vez-de-convex.md) | PostgreSQL con SQL a mano en vez de Convex | Aceptada |
 | [003](003-monolito-worker-despliegue-vm.md) | Monolito Next.js + worker, desplegado en VM con Docker Compose | Aceptada |
 | [004](004-modelo-de-amenazas.md) | Modelo de amenazas antes de implementar | Propuesta |
-| [005](005-api-publica-contract-first.md) | API pública tipo Stripe, primero en OpenAPI | Aceptada en parte (pagos; faltan checkout y webhooks) |
+| [005](005-api-publica-contract-first.md) | API pública tipo Stripe, primero en OpenAPI | Aceptada |
 | [006](006-autenticacion-clerk-y-api-keys.md) | Clerk para el dashboard, API keys propias para la API | Aceptada en parte (API keys; falta el dashboard) |
 | [007](007-dinero-y-maquina-de-estados.md) | Dinero como entero y máquina de estados en SQL | Aceptada |
 | [008](008-verificacion-on-chain.md) | Verificación on-chain como función pura, asociación por `tx_hash` | Aceptada |
-| [009](009-webhooks-outbox.md) | Webhooks con outbox en Postgres y firma HMAC | Propuesta |
+| [009](009-webhooks-outbox.md) | Webhooks con outbox en Postgres y firma HMAC | Aceptada |
 | [010](010-checkout-y-boton-embebible.md) | Checkout alojado único; el botón crea un PaymentIntent | Aceptada |
 | [011](011-tests-y-ci.md) | Tests con `node:test` y CI en GitHub Actions | Aceptada |
 | [012](012-alcance-del-producto.md) | Alcance del producto y trabajo futuro | Propuesta |

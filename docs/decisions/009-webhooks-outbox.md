@@ -1,7 +1,7 @@
 # ADR-009: Webhooks — outbox en Postgres, firma HMAC y reintentos
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Propuesta  
+**Estado:** Aceptada (01/10/2026; una fila por evento, reserva con `SKIP LOCKED`, SSRF también al enviar y sin seguir redirecciones)  
 **Contexto:** El servidor del comercio necesita enterarse de que un pago se ha completado sin estar consultando
 
 ---

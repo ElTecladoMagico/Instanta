@@ -47,6 +47,18 @@ services:
       migrate: { condition: service_completed_successfully }
     profiles: [deploy]
 
+  worker:
+    # Comprueba pagos, caduca los vencidos y envía los webhooks cada 5 s (ADR-003, ADR-009).
+    image: instanta-worker
+    build: { context: ., target: worker }
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://instanta:${POSTGRES_PASSWORD:-dev}@postgres:5432/instanta
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    profiles: [deploy]
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped

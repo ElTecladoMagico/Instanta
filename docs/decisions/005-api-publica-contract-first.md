@@ -1,7 +1,7 @@
 # ADR-005: API pública tipo Stripe, diseñada primero en OpenAPI
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Propuesta  
+**Estado:** Aceptada (01/10/2026; todos los recursos de la spec implementados)  
 **Contexto:** Instanta solo se integra hoy con un botón HTML; un comercio con backend no tiene forma de crear ni consultar pagos
 
 ---

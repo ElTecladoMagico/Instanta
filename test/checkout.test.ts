@@ -185,3 +185,12 @@ test("un comercio sin nombre aparece como Instanta en el checkout", async () => 
   const { secret } = await newIntent({ name: null });
   assert.equal((await (await getSession(secret)).json()).merchant_name, "Instanta");
 });
+
+test("enviar la transacción guarda cuándo se envió (submitted_at)", async () => {
+  node.setConfirmations(usdc, 1);
+  const { id, secret } = await newIntent();
+  await postSubmit(secret, { tx_hash: servedHash() });
+  const [row] = await sql`SELECT submitted_at FROM payment_intents WHERE id = ${id}`;
+  assert.ok(row.submitted_at instanceof Date);
+  assert.ok(Date.now() - row.submitted_at.getTime() < 60_000);
+});

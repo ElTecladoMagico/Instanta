@@ -1,4 +1,4 @@
-# Imagen de la app Next.js (ADR-003). Las migraciones tienen su propia imagen: db/Dockerfile (ADR-014).
+# Imágenes de la app Next.js y del worker (ADR-003). Las migraciones tienen la suya: db/Dockerfile (ADR-014).
 FROM node:24-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -16,6 +16,18 @@ ARG NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
+# Worker: Node ejecuta el TypeScript de worker/ y lib/ directamente; no necesita el build de Next.js.
+FROM node:24-alpine AS worker
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json ./
+COPY lib ./lib
+COPY worker ./worker
+USER node
+CMD ["node", "worker/main.ts"]
+
+# App (última etapa: la que se construye por defecto).
 FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000

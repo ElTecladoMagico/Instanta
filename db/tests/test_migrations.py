@@ -39,3 +39,17 @@ def test_downgrade_removes_everything_and_upgrade_restores_it():
     assert not TABLES & tables()
     alembic("upgrade", "head")
     assert TABLES <= tables()
+
+
+def columns(table: str) -> set[str]:
+    with psycopg.connect(DATABASE_URL) as conn:
+        rows = conn.execute("SELECT column_name FROM information_schema.columns WHERE table_name = %s", (table,)).fetchall()
+    return {name for (name,) in rows}
+
+
+def test_0002_adds_submitted_at_and_downgrade_removes_it():
+    alembic("upgrade", "head")
+    assert "submitted_at" in columns("payment_intents")
+    alembic("downgrade", "0001")
+    assert "submitted_at" not in columns("payment_intents")
+    alembic("upgrade", "head")
