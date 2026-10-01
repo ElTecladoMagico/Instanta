@@ -9,7 +9,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Next.js incrusta las NEXT_PUBLIC_* en el bundle durante el build.
-ARG NEXT_PUBLIC_CONVEX_URL
 ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ARG NEXT_PUBLIC_ALCHEMY_RPC_URL
 ARG NEXT_PUBLIC_APP_URL

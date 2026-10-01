@@ -47,8 +47,8 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="https://convex.dev" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  Convex
+                <a href="https://www.postgresql.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  PostgreSQL
                 </a>
               </li>
             </ul>

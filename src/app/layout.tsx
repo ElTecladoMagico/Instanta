@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
-import { ConvexClientProvider } from "./ConvexClientProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 
 import "./globals.css";
@@ -45,7 +44,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={`${inter.variable} ${robotoMono.variable} antialiased`}>
-          <ConvexClientProvider>{children}</ConvexClientProvider>
+          {children}
         </body>
       </html>
     </ClerkProvider>
