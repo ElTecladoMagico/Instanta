@@ -32,7 +32,7 @@ Contrato completo de la API: [`docs/api/openapi.yaml`](docs/api/openapi.yaml). E
 | Cartera del comprador | wagmi + viem |
 | Verificación on-chain | JSON-RPC al nodo de Base + Blockscout para transferencias internas |
 | Trabajo en segundo plano | Proceso `worker` (Node 24) |
-| Despliegue | VPS con Docker Compose y Caddy (HTTPS automático) |
+| Despliegue | VPS con Docker Compose; HTTPS con un proxy compartido de la VPS (ADR-016) |
 
 ```
 lib/            lógica (con tests): pagos, verificación on-chain, webhooks, API keys, SSRF…
@@ -71,7 +71,7 @@ npm run worker                      # en otra terminal
 
 ## Documentación
 
-- [`docs/decisions/`](docs/decisions/README.md): decisiones de arquitectura (ADR 001–015) y calendario.
+- [`docs/decisions/`](docs/decisions/README.md): decisiones de arquitectura (ADR 001–016) y calendario.
 - [`docs/progreso/`](docs/progreso/README.md): diario de lo hecho en cada fase y por qué, con la evidencia de los tests.
 - [`docs/archive/`](docs/archive/): documentos del prototipo inicial.
 
