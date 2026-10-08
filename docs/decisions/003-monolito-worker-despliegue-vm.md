@@ -1,7 +1,7 @@
 # ADR-003: Arquitectura de procesos y despliegue — monolito + worker en una VM con Docker Compose
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Aceptada (30/09/2026; esqueleto desplegado, el worker llega con la fase 4)  
+**Estado:** Aceptada (30/09/2026; esqueleto desplegado, el worker llega con la fase 4) — TLS con un proxy compartido de la VPS por [ADR-016](016-proxy-compartido-en-la-vps.md)  
 **Contexto:** Con Postgres (ADR-002) aparecen servicios locales; sustituye a ADR-001
 
 ---
