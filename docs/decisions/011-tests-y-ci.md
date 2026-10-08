@@ -1,7 +1,7 @@
 # ADR-011: Calidad — tests con `node:test` y CI en GitHub Actions
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Aceptada (30/09/2026)  
+**Estado:** Aceptada (30/09/2026). Cambios al implementar: la CI corre solo en `push`, con `postgres:18` y `uv` para los tests de Alembic; el script de fixtures es `scripts/capture-tx.ts`; el guion E2E de `docs/` sigue pendiente  
 **Contexto:** El prototipo no tiene ningún test y las comprobaciones de seguridad (ADR-004) necesitan demostrarse
 
 ---

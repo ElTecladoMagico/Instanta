@@ -1,7 +1,7 @@
 # ADR-013: Admitir ETH nativo además de USDC
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Propuesta  
+**Estado:** Aceptada (30/09/2026: `NUMERIC(78,0)`, `token_address` nulo para ETH y rama ETH en `verify()`). La limitación de transferencias internas se resolvió en [ADR-015](015-eth-desde-cuentas-inteligentes.md)  
 **Contexto:** Para probar en testnet hace falta poder cobrar en ETH, como hacía el prototipo; modifica ADR-007 y ADR-008
 
 ---
