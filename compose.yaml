@@ -44,6 +44,7 @@ services:
       DATABASE_URL: postgres://instanta:${POSTGRES_PASSWORD:-dev}@postgres:5432/instanta
     depends_on:
       migrate: { condition: service_completed_successfully }
+    networks: [default, edge]
     profiles: [deploy]
 
   worker:
@@ -71,25 +72,14 @@ services:
       PUBLIC_URL: https://${DOMAIN:-localhost}/demo
       INSTANTA_API_URL: https://${DOMAIN:-localhost}
     restart: unless-stopped
-    profiles: [deploy]
-
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    environment:
-      DOMAIN: ${DOMAIN:-localhost}
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    depends_on: [app]
+    networks: [default, edge]
     profiles: [deploy]
 
 volumes:
   pgdata:
-  caddy_data:
-  caddy_config:
+
+# HTTPS lives outside this project: the VPS-wide proxy in /opt/edge (shared with other
+# projects) reaches `app` and `demo-store` over the external `edge` network by container name.
+networks:
+  edge:
+    external: true
