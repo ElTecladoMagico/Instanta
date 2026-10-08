@@ -5,7 +5,7 @@
 | [001](001-dev-workflow-no-docker.md) | Workflow de desarrollo con `concurrently`, sin Docker | Sustituida por 003 |
 | [002](002-postgres-sql-en-vez-de-convex.md) | PostgreSQL con SQL a mano en vez de Convex | Aceptada |
 | [003](003-monolito-worker-despliegue-vm.md) | Monolito Next.js + worker, desplegado en VM con Docker Compose | Aceptada |
-| [004](004-modelo-de-amenazas.md) | Modelo de amenazas antes de implementar | Propuesta |
+| [004](004-modelo-de-amenazas.md) | Modelo de amenazas antes de implementar | Aceptada |
 | [005](005-api-publica-contract-first.md) | API pública tipo Stripe, primero en OpenAPI | Aceptada |
 | [006](006-autenticacion-clerk-y-api-keys.md) | Clerk para el dashboard, API keys propias para la API | Aceptada |
 | [007](007-dinero-y-maquina-de-estados.md) | Dinero como entero y máquina de estados en SQL | Aceptada |
@@ -14,7 +14,7 @@
 | [010](010-checkout-y-boton-embebible.md) | Checkout alojado único; el botón crea un PaymentIntent | Aceptada |
 | [011](011-tests-y-ci.md) | Tests con `node:test` y CI en GitHub Actions | Aceptada |
 | [012](012-alcance-del-producto.md) | Alcance del producto y trabajo futuro | Propuesta |
-| [013](013-eth-nativo-en-testnet.md) | Admitir ETH nativo además de USDC (pruebas en testnet) | Propuesta |
+| [013](013-eth-nativo-en-testnet.md) | Admitir ETH nativo además de USDC (pruebas en testnet) | Aceptada |
 | [014](014-migraciones-con-alembic.md) | Migraciones con Alembic (SQL a mano) en vez del script propio | Aceptada |
 | [015](015-eth-desde-cuentas-inteligentes.md) | Pagos en ETH desde cuentas inteligentes (EIP-7702) vía transferencias internas de Blockscout | Aceptada |
 | [016](016-proxy-compartido-en-la-vps.md) | HTTPS con un proxy compartido de la VPS en vez de un Caddy propio | Aceptada |

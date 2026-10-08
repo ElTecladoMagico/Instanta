@@ -1,7 +1,7 @@
 # ADR-004: Seguridad — modelo de amenazas antes de implementar
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Propuesta  
+**Estado:** Aceptada (02/10/2026; T1–T8 con test: `settle`, `checkout`, `verify`, `payment-intents`, `api-keys` y `webhooks`. Abiertos: `return_url` en `http` en live y *DNS rebinding* en SSRF, entradas 09 y 11)  
 **Contexto:** Una pasarela de pagos cuyo prototipo se puede engañar para confirmar pagos que no existen
 
 ---

@@ -1,7 +1,7 @@
 # ADR-012: Alcance del producto — qué se demuestra y qué queda fuera
 
 **Fecha:** 30 de septiembre de 2026  
-**Estado:** Propuesta  
+**Estado:** Propuesta (fases 0–8 hechas el 02/10/2026; faltan landing actualizada, documentación generada desde OpenAPI, selector test/live y guion E2E)  
 **Contexto:** Instanta es a la vez un TFG y un producto que se quiere enseñar funcionando
 
 ---
