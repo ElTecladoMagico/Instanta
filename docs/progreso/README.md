@@ -19,3 +19,4 @@ Cada entrada sigue la misma estructura: **qué se hizo**, **por qué**, **cómo*
 | 10 | [Checkout, payment links y primeras pruebas E2E con pagos reales](10-checkout.md) | 01/10/2026 | 6 |
 | 11 | [Eventos, webhooks y worker](11-webhooks-worker.md) | 01/10/2026 | 7 |
 | 12 | [Dashboard, tienda de ejemplo y retirada de Convex](12-dashboard-demo.md) | 02/10/2026 | 8 |
+| 13 | [HTTPS con un proxy compartido de la VPS](13-proxy-compartido.md) | 01/10/2026 | — |
