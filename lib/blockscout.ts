@@ -2,10 +2,10 @@
 // Hacen falta para los pagos en ETH desde carteras inteligentes (EIP-7702, Safe…): el ETH no viaja en tx.value,
 // sino en una llamada interna que el nodo estándar no muestra.
 
-export type InternalTransfer = { type: string; to: string | null; value: string; success: boolean };
+export type InternalTransfer = { type: string; from: string; to: string | null; value: string; success: boolean };
 
 type Page = {
-  items: { type: string; to: { hash: string } | null; value: string; success: boolean }[];
+  items: { type: string; from: { hash: string }; to: { hash: string } | null; value: string; success: boolean }[];
   next_page_params: Record<string, string | number> | null;
 };
 
@@ -18,7 +18,13 @@ export async function internalTransfers(baseUrl: string, txHash: string): Promis
     if (!res.ok) throw new Error(`Blockscout: HTTP ${res.status}`);
     const page: Page = await res.json();
     for (const item of page.items) {
-      transfers.push({ type: item.type, to: item.to?.hash.toLowerCase() ?? null, value: item.value, success: item.success });
+      transfers.push({
+        type: item.type,
+        from: item.from.hash.toLowerCase(),
+        to: item.to?.hash.toLowerCase() ?? null,
+        value: item.value,
+        success: item.success,
+      });
     }
     if (!page.next_page_params) return transfers;
     query = "?" + new URLSearchParams(Object.entries(page.next_page_params).map(([k, v]) => [k, String(v)])).toString();

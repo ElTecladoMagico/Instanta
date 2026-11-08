@@ -44,7 +44,7 @@ export async function startFakeNode() {
   function blockscout(url: string, res: import("node:http").ServerResponse) {
     if (blockscoutDown) return res.writeHead(503).end();
     const hash = url.split("/")[4];
-    const items = (served.get(hash)?.internalTransfers ?? []).map((t) => ({ ...t, to: t.to ? { hash: t.to } : null }));
+    const items = (served.get(hash)?.internalTransfers ?? []).map((t) => ({ ...t, from: { hash: t.from }, to: t.to ? { hash: t.to } : null }));
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify({ items, next_page_params: null }));
   }
