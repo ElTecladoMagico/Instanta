@@ -41,6 +41,29 @@ export function PayFlow({ secret }: { secret: string }) {
   const [error, setError] = useState("");
   const [paying, setPaying] = useState(false);
   const [unsentHash, setUnsentHash] = useState<string | null>(null);
+  // El hash pendiente se guarda también en el navegador: si el comprador recarga la página después de pagar,
+  // no lo pierde y puede reintentar el envío en vez de pagar otra vez.
+  const storageKey = `instanta:unsent:${secret}`;
+  const rememberUnsent = useCallback(
+    (hash: string | null) => {
+      setUnsentHash(hash);
+      try {
+        if (hash) localStorage.setItem(storageKey, hash);
+        else localStorage.removeItem(storageKey);
+      } catch {
+        // almacenamiento no disponible (modo privado): queda solo en memoria
+      }
+    },
+    [storageKey],
+  );
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) setUnsentHash(saved);
+    } catch {
+      // idem
+    }
+  }, [storageKey]);
 
   const { address, isConnected, chainId } = useAccount();
   const { connect, connectors, isPending: connecting } = useConnect();
@@ -51,9 +74,11 @@ export function PayFlow({ secret }: { secret: string }) {
 
   const load = useCallback(async () => {
     const res = await fetch(`/v1/checkout/${secret}`);
-    if (res.ok) setSession(await res.json());
-    else setNotFound(true);
-  }, [secret]);
+    if (!res.ok) return setNotFound(true);
+    const current: Session = await res.json();
+    setSession(current);
+    if (current.tx_hash) rememberUnsent(null); // el servidor ya tiene la transacción; si caducó sin ella, se conserva
+  }, [secret, rememberUnsent]);
 
   useEffect(() => {
     load();
@@ -69,7 +94,7 @@ export function PayFlow({ secret }: { secret: string }) {
   // Manda el hash al servidor. Si falla (p. ej. sin conexión), se guarda para reintentarlo:
   // la transacción ya está en la cadena y no hay que pagar otra vez.
   async function submit(txHash: string) {
-    setUnsentHash(txHash);
+    rememberUnsent(txHash);
     const res = await fetch(`/v1/checkout/${secret}/submit`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -77,7 +102,7 @@ export function PayFlow({ secret }: { secret: string }) {
     });
     const body = await res.json().catch(() => null);
     if (res.ok && body) {
-      setUnsentHash(null);
+      rememberUnsent(null);
       setSession(body);
       return;
     }
@@ -85,7 +110,7 @@ export function PayFlow({ secret }: { secret: string }) {
     // y, si ya la tiene, se sigue como si nada (reintentar daría 409 porque el pago ya no está pendiente).
     const current = await fetch(`/v1/checkout/${secret}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
     if (current?.tx_hash === txHash.toLowerCase()) {
-      setUnsentHash(null);
+      rememberUnsent(null);
       setSession(current);
       return;
     }

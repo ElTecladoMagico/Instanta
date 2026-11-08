@@ -15,6 +15,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ cli
   if (result === "unexpected_state") {
     return apiError(409, "invalid_request_error", "payment_intent_unexpected_state", "This payment no longer accepts a payer.");
   }
+  if (result === "payment_expiring") {
+    return apiError(409, "invalid_request_error", "payment_expiring", "This payment expires in less than 5 minutes. Ask the merchant for a new one.");
+  }
   if (result === "invalid_signature") {
     return apiError(400, "invalid_request_error", "invalid_signature", "The signature does not match the address.", "signature");
   }

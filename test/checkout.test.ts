@@ -31,14 +31,19 @@ after(async () => {
 // Un pago de 1000 unidades de USDC a la cartera del fixture, creado justo antes de su transacción real.
 // Por defecto el pagador ya está registrado y es el del fixture (su clave privada no la tenemos, así que se
 // fija en la BD; el endpoint /payer se prueba aparte con una cartera generada en el test).
-async function newIntent({ expired = false, name = "Tienda de pruebas" as string | null, payerAddress = FIXTURE_PAYER as string | null } = {}) {
+async function newIntent({
+  expired = false,
+  name = "Tienda de pruebas" as string | null,
+  payerAddress = FIXTURE_PAYER as string | null,
+  expiresInMs = 3_600_000,
+} = {}) {
   const merchantId = newId("mer");
   await sql`INSERT INTO merchants (id, clerk_user_id, email, name, payout_address)
             VALUES (${merchantId}, ${merchantId}, 'shop@example.com', ${name}, ${RECIPIENT})`;
   const auth = { merchantId, livemode: false };
   const created = await createPaymentIntent(auth, { amount: "1000", currency: "usdc", description: "Taza", metadata: { secret_note: "x" } });
   const createdAt = new Date((Number(BigInt(usdc.block.timestamp)) - 60) * 1000);
-  const expiresAt = expired ? new Date(Date.now() - 1000) : new Date(Date.now() + 3_600_000);
+  const expiresAt = expired ? new Date(Date.now() - 1000) : new Date(Date.now() + expiresInMs);
   await sql`UPDATE payment_intents SET created_at = ${createdAt}, expires_at = ${expiresAt}, payer_address = ${payerAddress}
             WHERE id = ${created!.row.id}`;
   return { id: created!.row.id, secret: created!.clientSecret, key: await createApiKey(merchantId, false) };
@@ -284,4 +289,23 @@ test("ataque: reclamar una transferencia ajena al comercio → failed wrong_paye
   const body = await (await postSubmit(secret, { tx_hash: servedHash() })).json();
   assert.equal(body.status, "failed");
   assert.equal(body.failure_code, "wrong_payer");
+});
+
+// ── Caducidad al empezar a pagar ────────────────────────────────────────────
+// Si el comprador empieza a pagar justo antes de que caduque, la transacción puede llegar tarde y el pago
+// ya no la admitiría: pagaría sin que conste. Por eso no se registra el pagador con menos de 5 min de margen.
+
+test("con menos de 5 minutos hasta caducar no se puede empezar a pagar → 409 payment_expiring", async () => {
+  const { id, secret } = await newIntent({ payerAddress: null, expiresInMs: 4 * 60_000 });
+  const wallet = privateKeyToAccount(generatePrivateKey());
+  const res = await postPayer(secret, { address: wallet.address, signature: await wallet.signMessage({ message: payerMessage(id) }) });
+  assert.equal(res.status, 409);
+  assert.equal((await res.json()).error.code, "payment_expiring");
+});
+
+test("con margen suficiente sí se puede empezar a pagar", async () => {
+  const { id, secret } = await newIntent({ payerAddress: null, expiresInMs: 6 * 60_000 });
+  const wallet = privateKeyToAccount(generatePrivateKey());
+  const res = await postPayer(secret, { address: wallet.address, signature: await wallet.signMessage({ message: payerMessage(id) }) });
+  assert.equal(res.status, 200);
 });
