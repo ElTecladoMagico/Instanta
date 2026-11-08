@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { numeric, sql } from "../lib/db.ts";
 import { newId } from "../lib/ids.ts";
 import { checkPayment } from "../lib/settle.ts";
-import type { Row } from "../lib/payment-intents.ts";
+import type { PaymentIntentRow } from "../lib/payment-intents.ts";
 import { loadFixture, randomTxHash, startFakeNode, type Fixture } from "./helpers/fake-node.ts";
 
 const usdc = loadFixture("usdc-transfer"); // 1000 unidades de USDC a 0xb733…2810
@@ -34,7 +34,7 @@ async function processingIntent({ payTo = RECIPIENT, amount = 1000n, fixture = u
   const txHash = randomTxHash();
   node.serve(txHash, fixture);
   const createdAt = new Date((Number(BigInt(fixture.block.timestamp)) - 60) * 1000);
-  const [row] = await sql<Row[]>`
+  const [row] = await sql<PaymentIntentRow[]>`
     INSERT INTO payment_intents (id, merchant_id, livemode, amount, currency, chain_id, token_address, pay_to,
                                  status, tx_hash, client_secret_hash, created_at, expires_at)
     VALUES (${newId("pi")}, ${merchant}, false, ${numeric(amount)}, ${currency}, 84532, ${currency === "usdc" ? USDC : null}, ${payTo},
@@ -81,7 +81,7 @@ test("transacción revertida → failed reverted", async () => {
 test("transacción que el nodo aún no conoce (no minada) → sigue en processing", async () => {
   const intent = await processingIntent();
   await sql`UPDATE payment_intents SET tx_hash = ${randomTxHash()} WHERE id = ${intent.id}`;
-  const [row] = await sql<Row[]>`SELECT * FROM payment_intents WHERE id = ${intent.id}`;
+  const [row] = await sql<PaymentIntentRow[]>`SELECT * FROM payment_intents WHERE id = ${intent.id}`;
   assert.equal((await checkPayment(row)).status, "processing");
 });
 
@@ -99,7 +99,7 @@ test("un pago que no está en processing se devuelve tal cual, sin consultar al 
   const intent = await processingIntent();
   node.setDown(true); // si consultara al nodo, fallaría
   try {
-    const canceled = { ...intent, status: "canceled" };
+    const canceled = { ...intent, status: "canceled" as const };
     assert.equal(await checkPayment(canceled), canceled);
   } finally {
     node.setDown(false);
@@ -208,7 +208,7 @@ async function unknownTxSubmitted(minutesAgo: number) {
   const intent = await processingIntent();
   await sql`UPDATE payment_intents SET tx_hash = ${randomTxHash()}, submitted_at = now() - make_interval(mins => ${minutesAgo})
             WHERE id = ${intent.id}`;
-  return (await sql<Row[]>`SELECT * FROM payment_intents WHERE id = ${intent.id}`)[0];
+  return (await sql<PaymentIntentRow[]>`SELECT * FROM payment_intents WHERE id = ${intent.id}`)[0];
 }
 
 test("transacción desconocida enviada hace poco → sigue en processing", async () => {

@@ -6,10 +6,12 @@ import { numeric, sql } from "./db.ts";
 import { newId, sha256 } from "./ids.ts";
 import { network } from "./chains.ts";
 import type { Auth } from "./api-keys.ts";
-import { CURRENCIES } from "./money.ts";
+import { CURRENCIES, type Currency } from "./money.ts";
+import type { FailureCode } from "./verify.ts";
 import { recordEvent } from "./events.ts";
 
 const STATUSES = ["requires_payment", "processing", "succeeded", "failed", "canceled", "expired"] as const;
+export type Status = (typeof STATUSES)[number];
 
 // Lo que puede enviar el comercio al crear un pago. strictObject rechaza cualquier otro campo,
 // así que el cliente no puede elegir pay_to, la red ni el token (ADR-004, T5).
@@ -31,15 +33,15 @@ export const ListParams = z.object({
   status: z.enum(STATUSES).optional(),
 });
 
-export type Row = {
+export type PaymentIntentRow = {
   id: string;
   merchant_id: string;
   livemode: boolean;
   amount: bigint;
   amount_received: bigint;
-  currency: string;
-  status: string;
-  failure_code: string | null;
+  currency: Currency;
+  status: Status;
+  failure_code: FailureCode | null;
   pay_to: string;
   chain_id: number;
   token_address: string | null;
@@ -59,7 +61,7 @@ const unix = (date: Date | null) => (date ? Math.floor(date.getTime() / 1000) : 
 
 // Fila de la BD → objeto de la API. El client_secret solo existe en la respuesta de creación:
 // en la BD solo se guarda su hash (ADR-010).
-export function toApi(row: Row, clientSecret: string | null = null) {
+export function toApi(row: PaymentIntentRow, clientSecret: string | null = null) {
   return {
     id: row.id,
     object: "payment_intent",
@@ -92,7 +94,7 @@ export async function createPaymentIntent(auth: Auth, params: z.infer<typeof Cre
   const clientSecret = `${id}_secret_${randomBytes(16).toString("hex")}`;
   const { chainId, usdc } = network(auth.livemode);
   // INSERT … SELECT: si el comercio no tiene payout_address, no se inserta nada.
-  const [row] = await sql<Row[]>`
+  const [row] = await sql<PaymentIntentRow[]>`
     INSERT INTO payment_intents
       (id, merchant_id, payment_link_id, livemode, amount, currency, chain_id, token_address, pay_to,
        client_secret_hash, description, metadata, return_url, expires_at)
@@ -111,7 +113,7 @@ export async function createPaymentIntent(auth: Auth, params: z.infer<typeof Cre
 // o todos los pagos ("all", lo usa el worker).
 export async function expirePayments(scope: Auth | { clientSecretHash: string } | "all") {
   await sql.begin(async (tx) => {
-    const rows = await tx<Row[]>`
+    const rows = await tx<PaymentIntentRow[]>`
       UPDATE payment_intents SET status = 'expired'
       WHERE ${scope === "all" ? tx`true`
           : "clientSecretHash" in scope ? tx`client_secret_hash = ${scope.clientSecretHash}`
@@ -122,9 +124,9 @@ export async function expirePayments(scope: Auth | { clientSecretHash: string } 
   });
 }
 
-export async function getPaymentIntent(auth: Auth, id: string): Promise<Row | null> {
+export async function getPaymentIntent(auth: Auth, id: string): Promise<PaymentIntentRow | null> {
   await expirePayments(auth);
-  const [row] = await sql<Row[]>`
+  const [row] = await sql<PaymentIntentRow[]>`
     SELECT * FROM payment_intents
     WHERE id = ${id} AND merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}`;
   return row ?? null;
@@ -134,7 +136,7 @@ export async function getPaymentIntent(auth: Auth, id: string): Promise<Row | nu
 // Se pide un elemento de más para saber si hay otra página (has_more).
 export async function listPaymentIntents(auth: Auth, params: z.infer<typeof ListParams>) {
   await expirePayments(auth);
-  const rows = await sql<Row[]>`
+  const rows = await sql<PaymentIntentRow[]>`
     SELECT * FROM payment_intents
     WHERE merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
     ${params.status ? sql`AND status = ${params.status}` : sql``}
@@ -151,10 +153,10 @@ export async function listPaymentIntents(auth: Auth, params: z.infer<typeof List
 
 // Solo se puede cancelar un pago en requires_payment. El UPDATE con la condición de estado
 // es la transición de ADR-007: si otro proceso ya lo cambió, no se toca.
-export async function cancelPaymentIntent(auth: Auth, id: string): Promise<Row | "not_found" | "unexpected_state"> {
+export async function cancelPaymentIntent(auth: Auth, id: string): Promise<PaymentIntentRow | "not_found" | "unexpected_state"> {
   await expirePayments(auth);
   const row = await sql.begin(async (tx) => {
-    const [canceled] = await tx<Row[]>`
+    const [canceled] = await tx<PaymentIntentRow[]>`
       UPDATE payment_intents SET status = 'canceled'
       WHERE id = ${id} AND merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
         AND status = 'requires_payment'

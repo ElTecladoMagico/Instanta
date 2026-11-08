@@ -23,7 +23,15 @@ export type ChainTx = {
   internalTransfers?: InternalTransfer[];
 };
 
-export type FailureCode = "reverted" | "wrong_recipient" | "wrong_token" | "wrong_payer" | "amount_mismatch" | "tx_too_old";
+// tx_not_found no lo devuelve verify(): lo pone settle.ts cuando el nodo no conoce la transacción.
+export type FailureCode =
+  | "reverted"
+  | "wrong_recipient"
+  | "wrong_token"
+  | "wrong_payer"
+  | "amount_mismatch"
+  | "tx_too_old"
+  | "tx_not_found";
 
 export type Verdict =
   | { status: "succeeded"; amountReceived: bigint }

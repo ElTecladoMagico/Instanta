@@ -10,13 +10,14 @@ import { AlertCircle, CheckCircle, ExternalLink, Loader2, Shield, Wallet } from 
 import { ERC20_ABI } from "../../../../lib/usdc/abi";
 import { explorerTxUrl } from "../../../../lib/chains";
 import { formatAmount, type Currency } from "../../../../lib/money";
+import type { Status } from "../../../../lib/payment-intents";
 import { payerMessage } from "../../../../lib/payer";
 
 type Session = {
   id: string;
   amount: string;
   currency: Currency;
-  status: "requires_payment" | "processing" | "succeeded" | "failed" | "canceled" | "expired";
+  status: Status;
   failure_code: string | null;
   pay_to: `0x${string}`;
   chain_id: 84532 | 8453;

@@ -4,7 +4,7 @@ import { z } from "zod";
 import { sql } from "./db.ts";
 import { sha256 } from "./ids.ts";
 import { checkPayment } from "./settle.ts";
-import { expirePayments, type Row } from "./payment-intents.ts";
+import { expirePayments, type PaymentIntentRow } from "./payment-intents.ts";
 import { isPayerSignature, payerMessage } from "./payer.ts";
 
 // Solo se lee tx_hash; cualquier otro campo (importe, destino…) se ignora (ADR-004, T5).
@@ -17,7 +17,7 @@ export const PayerParams = z.strictObject({
   signature: z.string().regex(/^0x[0-9a-fA-F]+$/, "must be a 0x-prefixed hex signature"),
 });
 
-type CheckoutRow = Row & { merchant_name: string | null };
+type CheckoutRow = PaymentIntentRow & { merchant_name: string | null };
 
 // Vista pública del pago: lo necesario para pagar, sin metadata ni datos privados del comercio.
 export function toSession(row: CheckoutRow) {

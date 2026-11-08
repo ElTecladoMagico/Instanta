@@ -1,7 +1,7 @@
 // Pagos del comercio: los 50 más recientes.
 import { listPaymentIntents } from "../../../lib/payment-intents.ts";
 import { explorerTxUrl } from "../../../lib/chains.ts";
-import { formatAmount, type Currency } from "../../../lib/money.ts";
+import { formatAmount } from "../../../lib/money.ts";
 import { authFor, getMerchant } from "./session.ts";
 
 const STATUS_STYLE: Record<string, string> = {
@@ -27,7 +27,7 @@ export default async function PaymentsPage() {
             <tbody>
               {rows.map((pi) => (
                 <tr key={pi.id} className="border-t border-outline-variant">
-                  <td className="p-3 font-medium">{formatAmount(pi.amount.toString(), pi.currency as Currency)}</td>
+                  <td className="p-3 font-medium">{formatAmount(pi.amount.toString(), pi.currency)}</td>
                   <td className="p-3">
                     <span className={`px-2 py-1 rounded-full text-xs ${STATUS_STYLE[pi.status] ?? "bg-surface-container"}`}>{pi.status}</span>
                     {pi.failure_code && <span className="ml-2 text-xs text-error">{pi.failure_code}</span>}

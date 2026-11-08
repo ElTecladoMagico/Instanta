@@ -5,7 +5,7 @@ import type { TransactionSql } from "postgres";
 import { z } from "zod";
 import { sql } from "./db.ts";
 import { newId } from "./ids.ts";
-import { toApi, type Row } from "./payment-intents.ts";
+import { toApi, type PaymentIntentRow } from "./payment-intents.ts";
 import type { Auth } from "./api-keys.ts";
 
 export const EVENT_TYPES = [
@@ -17,7 +17,7 @@ export const EVENT_TYPES = [
 export type EventType = (typeof EVENT_TYPES)[number];
 
 // tx: la transacción abierta con sql.begin() en la que se acaba de cambiar el estado del pago.
-export async function recordEvent(tx: TransactionSql, row: Row, type: EventType): Promise<void> {
+export async function recordEvent(tx: TransactionSql, row: PaymentIntentRow, type: EventType): Promise<void> {
   await tx`
     INSERT INTO events (id, merchant_id, livemode, type, data)
     VALUES (${newId("evt")}, ${row.merchant_id}, ${row.livemode}, ${type}, ${tx.json({ object: toApi(row) })})`;

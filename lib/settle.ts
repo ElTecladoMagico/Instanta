@@ -5,9 +5,8 @@ import { numeric, sql } from "./db.ts";
 import { network } from "./chains.ts";
 import { rpc } from "./rpc.ts";
 import { internalTransfers, type InternalTransfer } from "./blockscout.ts";
-import { verify, type ChainTx } from "./verify.ts";
-import type { Currency } from "./money.ts";
-import type { Row } from "./payment-intents.ts";
+import { verify, type ChainTx, type Verdict } from "./verify.ts";
+import type { PaymentIntentRow } from "./payment-intents.ts";
 import { recordEvent } from "./events.ts";
 
 type Receipt = ChainTx["receipt"] & { blockNumber: string };
@@ -20,7 +19,7 @@ const INDEXING_GRACE_SECONDS = 600;
 // (se descartó o nunca llegó a difundirse): el pago se da por fallido con tx_not_found.
 const TX_NOT_FOUND_AFTER_MS = 60 * 60 * 1000;
 
-export async function checkPayment(row: Row): Promise<Row> {
+export async function checkPayment(row: PaymentIntentRow): Promise<PaymentIntentRow> {
   if (row.status !== "processing" || !row.tx_hash) return row;
   const { rpcUrl, blockscoutUrl, confirmations: required, head: headTag } = network(row.livemode);
 
@@ -66,7 +65,7 @@ export async function checkPayment(row: Row): Promise<Row> {
   // 2b. Decidir (función pura).
   const verdict = verify(
     {
-      currency: row.currency as Currency,
+      currency: row.currency,
       amount: row.amount,
       payTo: row.pay_to,
       tokenAddress: row.token_address,
@@ -83,13 +82,14 @@ export async function checkPayment(row: Row): Promise<Row> {
   return save(row, verdict);
 }
 
-type Result = { status: "succeeded"; amountReceived: bigint } | { status: "failed"; code: string; amountReceived: bigint };
+// Un veredicto definitivo: succeeded o failed.
+type Result = Exclude<Verdict, { status: "processing" }>;
 
 // 3. Guardar el resultado y su evento en la misma transacción (ADR-009). La condición de estado
 //    evita pisar un cambio hecho por otro proceso: si dos procesos verifican a la vez, solo uno escribe.
-async function save(row: Row, verdict: Result): Promise<Row> {
+async function save(row: PaymentIntentRow, verdict: Result): Promise<PaymentIntentRow> {
   const updated = await sql.begin(async (tx) => {
-    const [changed] = await tx<Row[]>`
+    const [changed] = await tx<PaymentIntentRow[]>`
       UPDATE payment_intents
       SET status = ${verdict.status},
           amount_received = ${numeric(verdict.amountReceived)},
@@ -101,6 +101,6 @@ async function save(row: Row, verdict: Result): Promise<Row> {
     return changed;
   });
   if (updated) return updated;
-  const [current] = await sql<Row[]>`SELECT * FROM payment_intents WHERE id = ${row.id}`;
+  const [current] = await sql<PaymentIntentRow[]>`SELECT * FROM payment_intents WHERE id = ${row.id}`;
   return current;
 }

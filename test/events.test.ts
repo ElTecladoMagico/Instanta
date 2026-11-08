@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { numeric, sql } from "../lib/db.ts";
 import { newId } from "../lib/ids.ts";
 import { createApiKey } from "../lib/api-keys.ts";
-import { createPaymentIntent, type Row } from "../lib/payment-intents.ts";
+import { createPaymentIntent, type PaymentIntentRow } from "../lib/payment-intents.ts";
 import { checkPayment } from "../lib/settle.ts";
 import { getCheckout } from "../lib/checkout.ts";
 import { EVENT_TYPES } from "../lib/events.ts";
@@ -42,7 +42,7 @@ async function processingIntent(amount = 1000n) {
   const txHash = randomTxHash();
   node.serve(txHash, usdc);
   const createdAt = new Date((Number(BigInt(usdc.block.timestamp)) - 60) * 1000);
-  const [row] = await sql<Row[]>`
+  const [row] = await sql<PaymentIntentRow[]>`
     INSERT INTO payment_intents (id, merchant_id, livemode, amount, currency, chain_id, token_address, pay_to,
                                  status, tx_hash, client_secret_hash, created_at, expires_at)
     VALUES (${newId("pi")}, ${merchantId}, false, ${numeric(amount)}, 'usdc', 84532, ${USDC}, ${RECIPIENT},
