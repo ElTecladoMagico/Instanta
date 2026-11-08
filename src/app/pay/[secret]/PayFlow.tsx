@@ -77,7 +77,7 @@ export function PayFlow({ secret }: { secret: string }) {
     if (!res.ok) return setNotFound(true);
     const current: Session = await res.json();
     setSession(current);
-    if (current.status !== "requires_payment") rememberUnsent(null); // el servidor ya tiene la transacción
+    if (current.tx_hash) rememberUnsent(null); // el servidor ya tiene la transacción; si caducó sin ella, se conserva
   }, [secret, rememberUnsent]);
 
   useEffect(() => {
