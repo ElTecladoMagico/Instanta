@@ -116,13 +116,25 @@ test("si otro proceso ya cambió el pago, no se pisa: se devuelve el estado actu
   assert.equal(row.failure_code, "reverted");
 });
 
-test("los pagos de live se comprueban contra el nodo de Base (BASE_RPC_URL)", async () => {
+// En live no se cuentan bloques: Base produce uno cada 200 ms. Se espera a que el bloque sea "safe",
+// es decir, a que su lote esté publicado en Ethereum (unos 2 min).
+async function liveIntent() {
   process.env.BASE_RPC_URL = node.url;
-  node.setConfirmations(usdc, 20); // live exige 10
   const intent = await processingIntent();
   await sql`UPDATE payment_intents SET livemode = true, chain_id = 8453 WHERE id = ${intent.id}`;
-  const row = await checkPayment({ ...intent, livemode: true, chain_id: 8453 });
-  assert.equal(row.status, "succeeded");
+  return { ...intent, livemode: true, chain_id: 8453 };
+}
+
+test("live: con muchos bloques encima pero aún no safe → sigue en processing", async () => {
+  node.setConfirmations(usdc, 50);
+  node.setSafe(usdc, false);
+  assert.equal((await checkPayment(await liveIntent())).status, "processing");
+});
+
+test("live: en cuanto el bloque es safe → succeeded, contra el nodo de Base (BASE_RPC_URL)", async () => {
+  node.setConfirmations(usdc, 1);
+  node.setSafe(usdc, true);
+  assert.equal((await checkPayment(await liveIntent())).status, "succeeded");
 });
 
 // ── ETH desde cuentas inteligentes: transferencias internas vía Blockscout (ADR-015) ──
