@@ -17,13 +17,15 @@ const REQUIRED = 2; // confirmaciones exigidas
 // Datos reales de los fixtures:
 // usdc-transfer: Transfer de 1000 unidades (0,001 USDC) a 0xb733…2810, bloque con timestamp 1790792084.
 //                También emite AuthorizationUsed, que lleva otra dirección (0x9b16…e40f) en topics[2].
-// eth-transfer:  1e13 wei (0,00001 ETH) a 0xac50…1d0b, bloque con timestamp 1790792852.
+//                El pagador (topics[1] del Transfer) es 0x2876…d96e; la transacción la envió otra cuenta (ERC-3009).
+// eth-transfer:  1e13 wei (0,00001 ETH) a 0xac50…1d0b, enviada por la propia 0xac50…1d0b, bloque con timestamp 1790792852.
 const usdcIntent: Intent = {
   currency: "usdc",
   amount: 1000n,
   payTo: "0xb733d15fc0e90f0642fd369796c8025f18742810",
   tokenAddress: USDC,
   createdAt: 1790792084 - 60,
+  payer: "0x28761425554dc913788dbec7e502796665edd96e",
 };
 const ethIntent: Intent = {
   currency: "eth",
@@ -31,6 +33,7 @@ const ethIntent: Intent = {
   payTo: "0xac50945444bdf9fef69b9a74819f093a4b491d0b",
   tokenAddress: null,
   createdAt: 1790792852 - 60,
+  payer: "0xac50945444bdf9fef69b9a74819f093a4b491d0b",
 };
 
 // ── USDC ────────────────────────────────────────────────────────────────────
@@ -139,6 +142,7 @@ const eth7702Intent: Intent = {
   payTo: "0xAE76BEEdd8DD39878D22E1b7a8Ff96e5c5e8B17b",
   tokenAddress: null,
   createdAt: 1790849960 - 60,
+  payer: "0xae76beedd8dd39878d22e1b7a8ff96e5c5e8b17b", // la cuenta inteligente que hace la llamada interna
 };
 
 test("ETH desde una cuenta inteligente: cuenta la transferencia interna al comercio → succeeded", () => {
@@ -183,6 +187,44 @@ test("E2E real: 0,0001 ETH desde MetaMask (cuenta inteligente) → succeeded", (
 });
 
 test("E2E real: 0,01 USDC desde MetaMask (cuenta inteligente) → succeeded", () => {
-  const intent: Intent = { currency: "usdc", amount: 10_000n, payTo: eth7702Intent.payTo, tokenAddress: USDC, createdAt: 1790851226 - 60 };
+  const intent: Intent = { ...eth7702Intent, currency: "usdc", amount: 10_000n, tokenAddress: USDC, createdAt: 1790851226 - 60 };
   assert.deepEqual(verify(intent, fixture("e2e-usdc"), ENOUGH, REQUIRED), { status: "succeeded", amountReceived: 10_000n });
+});
+
+// ── Pagador (ADR-004, T13) ──────────────────────────────────────────────────
+// Solo cuentan los fondos que salen de la cartera que firmó en el checkout. Sin esta regla, quien tenga un pago
+// abierto podría reclamar como suyo cualquier transferencia que otra persona haga a la cartera del comercio.
+
+test("USDC: Transfer al comercio desde otra cartera → failed wrong_payer", () => {
+  assert.deepEqual(verify({ ...usdcIntent, payer: OTHER }, usdcTx, ENOUGH, REQUIRED), {
+    status: "failed",
+    code: "wrong_payer",
+    amountReceived: 0n,
+  });
+});
+
+test("USDC: el pagador es quien envía los fondos (topics[1]), no quien envía la transacción", () => {
+  const relayer = "0x68a96f41ff1e9f2e7b591a931a4ad224e7c07863"; // envió la transacción ERC-3009
+  assert.equal(verify({ ...usdcIntent, payer: relayer }, usdcTx, ENOUGH, REQUIRED).status, "failed");
+});
+
+test("ETH: transferencia directa desde otra cartera → failed wrong_payer", () => {
+  assert.deepEqual(verify({ ...ethIntent, payer: OTHER }, ethTx, ENOUGH, REQUIRED), {
+    status: "failed",
+    code: "wrong_payer",
+    amountReceived: 0n,
+  });
+});
+
+test("ETH desde una cuenta inteligente: llamada interna desde otra cartera → failed wrong_payer", () => {
+  assert.deepEqual(verify({ ...eth7702Intent, payer: OTHER }, eth7702Tx, ENOUGH, REQUIRED), {
+    status: "failed",
+    code: "wrong_payer",
+    amountReceived: 0n,
+  });
+});
+
+test("el pagador se compara sin distinguir mayúsculas (checksum EIP-55)", () => {
+  const checksummed = { ...usdcIntent, payer: "0x28761425554Dc913788DBeC7E502796665EDd96e" };
+  assert.equal(verify(checksummed, usdcTx, ENOUGH, REQUIRED).status, "succeeded");
 });
