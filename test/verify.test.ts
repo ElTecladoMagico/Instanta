@@ -228,3 +228,14 @@ test("el pagador se compara sin distinguir mayúsculas (checksum EIP-55)", () =>
   const checksummed = { ...usdcIntent, payer: "0x28761425554Dc913788DBeC7E502796665EDd96e" };
   assert.equal(verify(checksummed, usdcTx, ENOUGH, REQUIRED).status, "succeeded");
 });
+
+// ── Pago real posterior a Denim (bloques de 200 ms) con el pagador registrado (T13) ──
+// e2e-usdc-denim: prueba manual del 08/11/2026 en la tienda de ejemplo. MetaMask lo envió desde un relayer
+// (tx.from 0xb01c…, a un contrato 0xdb9b…): el pagador real, 0xd412…c347, solo aparece en topics[1] del Transfer.
+test("E2E real tras Denim: 0,01 USDC firmado por el pagador y enviado por un relayer → succeeded", () => {
+  const payer = "0xd412aca556eb445581f870c8aeb708ad7762c347";
+  const intent: Intent = { ...eth7702Intent, currency: "usdc", amount: 10_000n, tokenAddress: USDC, createdAt: 1794164860 - 60, payer };
+  const tx = fixture("e2e-usdc-denim");
+  assert.deepEqual(verify(intent, tx, ENOUGH, REQUIRED), { status: "succeeded", amountReceived: 10_000n });
+  assert.equal(verify({ ...intent, payer: OTHER }, tx, ENOUGH, REQUIRED).status, "failed");
+});
