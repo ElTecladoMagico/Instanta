@@ -1,8 +1,8 @@
 // Transferencias internas de una transacción, según Blockscout (explorador de bloques de código abierto) (ADR-015).
 // Hacen falta para los pagos en ETH desde carteras inteligentes (EIP-7702, Safe…): el ETH no viaja en tx.value,
 // sino en una llamada interna que el nodo estándar no muestra.
-
-export type InternalTransfer = { type: string; from: string; to: string | null; value: string; success: boolean };
+// Es un adaptador: traduce la respuesta de Blockscout al tipo que define el núcleo (verify.ts).
+import type { InternalTransfer } from "./verify.ts";
 
 type Page = {
   items: { type: string; from: { hash: string }; to: { hash: string } | null; value: string; success: boolean }[];

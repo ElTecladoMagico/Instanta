@@ -4,8 +4,8 @@
 import { numeric, sql } from "./db.ts";
 import { network } from "./chains.ts";
 import { rpc } from "./rpc.ts";
-import { internalTransfers, type InternalTransfer } from "./blockscout.ts";
-import { verify, type ChainTx, type Verdict } from "./verify.ts";
+import { internalTransfers } from "./blockscout.ts";
+import { verify, type ChainTx, type InternalTransfer, type Verdict } from "./verify.ts";
 import type { PaymentIntentRow } from "./payment-intents.ts";
 import { recordEvent } from "./events.ts";
 
