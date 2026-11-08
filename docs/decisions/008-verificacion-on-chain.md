@@ -79,3 +79,7 @@ Base es una L2: un bloque confirmado por el secuenciador aún no es final en Eth
 ## Decisión
 
 Asociar por `tx_hash` enviado desde el checkout con `UNIQUE(tx_hash)`. Verificar con una función pura sobre el recibo que comprueba éxito, contrato del token, destinatario, importe, antigüedad y confirmaciones.
+
+## Cambios
+
+- 2026-11-08: Base produce un bloque cada 200 ms desde la actualización Denim (21-10-2026 en Base Sepolia y 5-11-2026 en la red principal), así que contar N bloques dejó de tener sentido: 10 bloques son unos 2 s. En live, `succeeded` pasa a significar que el bloque del pago es `safe`, es decir, que su lote ya está publicado en Ethereum (unos 2 min según la documentación de Base). La finalidad en L1 llega unos 13 min después. En test se mantienen 2 bloques desde el último, para que las pruebas sean ágiles. Configuración en `lib/chains.ts` (`head` y `confirmations`).
