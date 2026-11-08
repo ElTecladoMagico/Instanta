@@ -4,6 +4,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { sql } from "./db.ts";
 import { isPublicUrl } from "./ssrf.ts";
+import { eventPayload, type EventRow } from "./events.ts";
 
 const MAX_ATTEMPTS = 8;
 // Espera antes de cada reintento, en minutos: 1, 5, 30, 2 h y después cada 12 h (unos 2 días en total).
@@ -32,8 +33,6 @@ export function verifySignature(secret: string, header: string, body: string, no
 }
 
 // ── Entrega ─────────────────────────────────────────────────────────────────
-
-type EventRow = { id: string; merchant_id: string; livemode: boolean; type: string; data: unknown; created_at: Date; attempts: number };
 
 export async function deliverPendingEvents(limit = 20): Promise<void> {
   // Reservar los eventos que tocan: se adelanta su next_attempt_at 2 minutos. Otro worker no los toma
@@ -79,14 +78,7 @@ async function deliver(event: EventRow) {
 async function send(endpoint: { url: string; secret: string }, event: EventRow): Promise<string | null> {
   // Se vuelve a comprobar aquí y no solo al registrar la URL: el DNS de su dominio puede haber cambiado.
   if (!(await isPublicUrl(endpoint.url))) return "URL is not public (SSRF protection)";
-  const body = JSON.stringify({
-    id: event.id,
-    object: "event",
-    livemode: event.livemode,
-    type: event.type,
-    created: Math.floor(event.created_at.getTime() / 1000),
-    data: event.data,
-  });
+  const body = JSON.stringify(eventPayload(event));
   try {
     const res = await fetch(endpoint.url, {
       method: "POST",

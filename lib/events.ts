@@ -21,17 +21,32 @@ export const EventListParams = z.object({
   type: z.enum(EVENT_TYPES).optional(),
 });
 
-type EventRow = { id: string; livemode: boolean; type: EventType; data: unknown; created_at: Date; delivery_status: string };
+export type EventRow = {
+  id: string;
+  merchant_id: string;
+  livemode: boolean;
+  type: EventType;
+  data: unknown;
+  created_at: Date;
+  delivery_status: "pending" | "delivered" | "failed";
+  attempts: number;
+  next_attempt_at: Date;
+  last_error: string | null;
+};
 
-export const eventToApi = (row: EventRow) => ({
+// El evento tal como lo recibe el comercio en el webhook (cuerpo firmado, lib/webhooks.ts) y en la API.
+// El orden de las claves forma parte del texto firmado: no cambiarlo.
+export const eventPayload = (row: EventRow) => ({
   id: row.id,
   object: "event",
   livemode: row.livemode,
   type: row.type,
   created: Math.floor(row.created_at.getTime() / 1000),
   data: row.data,
-  delivery_status: row.delivery_status,
 });
+
+// La API añade el estado del envío, que el webhook no lleva.
+export const eventToApi = (row: EventRow) => ({ ...eventPayload(row), delivery_status: row.delivery_status });
 
 export async function getEvent(auth: Auth, id: string): Promise<EventRow | null> {
   const [row] = await sql<EventRow[]>`
