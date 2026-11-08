@@ -29,3 +29,19 @@ export async function checkoutFromLink(linkId: string): Promise<{ checkoutUrl: s
   if (!created) return "payout_address_missing";
   return { checkoutUrl: toApi(created.row, created.clientSecret).checkout_url! };
 }
+
+// Para el dashboard: los enlaces del comercio y activarlos o desactivarlos.
+export function listPaymentLinks(auth: Auth) {
+  return sql<{ id: string; title: string; amount: bigint; currency: Currency; active: boolean; created_at: Date }[]>`
+    SELECT id, title, amount, currency, active, created_at FROM payment_links
+    WHERE merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
+    ORDER BY created_at DESC`;
+}
+
+export async function setPaymentLinkActive(auth: Auth, linkId: string, active: boolean): Promise<boolean> {
+  const rows = await sql`
+    UPDATE payment_links SET active = ${active}
+    WHERE id = ${linkId} AND merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
+    RETURNING id`;
+  return rows.length > 0;
+}

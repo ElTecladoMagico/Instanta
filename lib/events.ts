@@ -55,3 +55,14 @@ export async function listEvents(auth: Auth, params: z.infer<typeof EventListPar
     LIMIT ${params.limit + 1}`;
   return { rows: rows.slice(0, params.limit), hasMore: rows.length > params.limit };
 }
+
+// ── Reenvío desde el dashboard ────────────────────────────────────────────────
+// Vuelve a poner en cola un aviso que agotó sus reintentos (p. ej. tras arreglar el servidor del comercio).
+export async function resendEvent(auth: Auth, eventId: string): Promise<boolean> {
+  const rows = await sql`
+    UPDATE events SET delivery_status = 'pending', attempts = 0, last_error = NULL, next_attempt_at = now()
+    WHERE id = ${eventId} AND merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
+      AND delivery_status = 'failed'
+    RETURNING id`;
+  return rows.length > 0;
+}

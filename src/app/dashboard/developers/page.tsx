@@ -1,5 +1,5 @@
 // Para el equipo técnico del comercio: API keys, endpoint de webhooks e historial de avisos.
-import { listApiKeys } from "../../../../lib/merchants.ts";
+import { listApiKeys } from "../../../../lib/api-keys.ts";
 import { endpointToApi, listEndpoints } from "../../../../lib/webhook-endpoints.ts";
 import { listEvents } from "../../../../lib/events.ts";
 import { authFor, getMerchant } from "../session.ts";

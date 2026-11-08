@@ -30,3 +30,19 @@ export async function authenticate(request: Request): Promise<Auth | null> {
     WHERE key_hash = ${sha256(match[1])} AND revoked_at IS NULL`;
   return row ? { merchantId: row.merchant_id, livemode: row.livemode } : null;
 }
+
+// Para el dashboard: el comercio ve sus claves por el prefijo, nunca la clave ni su hash.
+export function listApiKeys(auth: Auth) {
+  return sql<{ id: string; prefix: string; created_at: Date; revoked: boolean }[]>`
+    SELECT id, prefix, created_at, revoked_at IS NOT NULL AS revoked FROM api_keys
+    WHERE merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
+    ORDER BY created_at DESC`;
+}
+
+export async function revokeApiKey(merchantId: string, keyId: string): Promise<boolean> {
+  const rows = await sql`
+    UPDATE api_keys SET revoked_at = now()
+    WHERE id = ${keyId} AND merchant_id = ${merchantId} AND revoked_at IS NULL
+    RETURNING id`;
+  return rows.length > 0;
+}
