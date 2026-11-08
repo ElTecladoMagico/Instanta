@@ -1,13 +1,15 @@
 "use client";
 
 // Flujo de pago del comprador. Toda la lógica de negocio está en el servidor; esta página solo:
-// 1) pide los datos del pago, 2) conecta la cartera y cambia a la red correcta, 3) envía la transacción,
-// 4) manda el hash al servidor y 5) consulta el estado mientras se confirma.
+// 1) pide los datos del pago, 2) conecta la cartera y cambia a la red correcta, 3) firma el mensaje del pago
+// para registrar la cartera pagadora (T13), 4) envía la transacción, 5) manda el hash al servidor
+// y 6) consulta el estado mientras se confirma.
 import { useCallback, useEffect, useState } from "react";
-import { useAccount, useConnect, useSendTransaction, useSwitchChain, useWriteContract } from "wagmi";
+import { useAccount, useConnect, useSendTransaction, useSignMessage, useSwitchChain, useWriteContract } from "wagmi";
 import { AlertCircle, CheckCircle, ExternalLink, Loader2, Shield, Wallet } from "lucide-react";
 import { ERC20_ABI } from "../../../../lib/usdc/abi";
 import { explorerTxUrl, formatAmount } from "../../../../lib/format";
+import { payerMessage } from "../../../../lib/payer";
 
 type Session = {
   id: string;
@@ -30,6 +32,7 @@ const FAILURE_TEXT: Record<string, string> = {
   wrong_token: "The transaction used a different token.",
   amount_mismatch: "The amount received is lower than the amount due.",
   tx_too_old: "The transaction is older than this payment.",
+  wrong_payer: "The funds were sent from a different wallet than the one that authorized this payment.",
 };
 
 export function PayFlow({ secret }: { secret: string }) {
@@ -44,6 +47,7 @@ export function PayFlow({ secret }: { secret: string }) {
   const { switchChainAsync } = useSwitchChain();
   const { sendTransactionAsync } = useSendTransaction();
   const { writeContractAsync } = useWriteContract();
+  const { signMessageAsync } = useSignMessage();
 
   const load = useCallback(async () => {
     const res = await fetch(`/v1/checkout/${secret}`);
@@ -94,6 +98,18 @@ export function PayFlow({ secret }: { secret: string }) {
     setError("");
     try {
       if (chainId !== session.chain_id) await switchChainAsync({ chainId: session.chain_id });
+      // Antes de mover fondos: la cartera firma el mensaje del pago (sin gas). Si la firma no vale,
+      // el servidor la rechaza aquí y no se llega a pagar.
+      const signature = await signMessageAsync({ message: payerMessage(session.id) });
+      const registered = await fetch(`/v1/checkout/${secret}/payer`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ address, signature }),
+      });
+      if (!registered.ok) {
+        const body = await registered.json().catch(() => null);
+        throw new Error(body?.error?.message ?? "Could not verify your wallet.");
+      }
       const amount = BigInt(session.amount);
       const txHash =
         session.currency === "eth"
