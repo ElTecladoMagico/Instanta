@@ -1,11 +1,8 @@
-// Patrón outbox (ADR-009): el evento del webhook se guarda en la MISMA transacción de la base de datos
-// que el cambio de estado del pago. O se guardan los dos, o ninguno: nunca hay un pago completado sin su aviso.
-// El worker envía después los eventos pendientes (lib/webhooks.ts).
-import type { TransactionSql } from "postgres";
+// Eventos de los pagos (ADR-009): tipos, historial (/v1/events) y reenvío desde el dashboard.
+// Se guardan en la misma transacción que el cambio de estado del pago (outbox, en lib/payment-intents.ts)
+// y el worker los envía después (lib/webhooks.ts).
 import { z } from "zod";
 import { sql } from "./db.ts";
-import { newId } from "./ids.ts";
-import { toApi, type Row } from "./payment-intents.ts";
 import type { Auth } from "./api-keys.ts";
 
 export const EVENT_TYPES = [
@@ -16,13 +13,6 @@ export const EVENT_TYPES = [
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
 
-// tx: la transacción abierta con sql.begin() en la que se acaba de cambiar el estado del pago.
-export async function recordEvent(tx: TransactionSql, row: Row, type: EventType): Promise<void> {
-  await tx`
-    INSERT INTO events (id, merchant_id, livemode, type, data)
-    VALUES (${newId("evt")}, ${row.merchant_id}, ${row.livemode}, ${type}, ${tx.json({ object: toApi(row) })})`;
-}
-
 // ── Consulta del historial (/v1/events) ─────────────────────────────────────
 
 export const EventListParams = z.object({
@@ -31,17 +21,32 @@ export const EventListParams = z.object({
   type: z.enum(EVENT_TYPES).optional(),
 });
 
-type EventRow = { id: string; livemode: boolean; type: EventType; data: unknown; created_at: Date; delivery_status: string };
+export type EventRow = {
+  id: string;
+  merchant_id: string;
+  livemode: boolean;
+  type: EventType;
+  data: unknown;
+  created_at: Date;
+  delivery_status: "pending" | "delivered" | "failed";
+  attempts: number;
+  next_attempt_at: Date;
+  last_error: string | null;
+};
 
-export const eventToApi = (row: EventRow) => ({
+// El evento tal como lo recibe el comercio en el webhook (cuerpo firmado, lib/webhooks.ts) y en la API.
+// El orden de las claves forma parte del texto firmado: no cambiarlo.
+export const eventPayload = (row: EventRow) => ({
   id: row.id,
   object: "event",
   livemode: row.livemode,
   type: row.type,
   created: Math.floor(row.created_at.getTime() / 1000),
   data: row.data,
-  delivery_status: row.delivery_status,
 });
+
+// La API añade el estado del envío, que el webhook no lleva.
+export const eventToApi = (row: EventRow) => ({ ...eventPayload(row), delivery_status: row.delivery_status });
 
 export async function getEvent(auth: Auth, id: string): Promise<EventRow | null> {
   const [row] = await sql<EventRow[]>`
@@ -64,4 +69,15 @@ export async function listEvents(auth: Auth, params: z.infer<typeof EventListPar
     ORDER BY created_at DESC, id DESC
     LIMIT ${params.limit + 1}`;
   return { rows: rows.slice(0, params.limit), hasMore: rows.length > params.limit };
+}
+
+// ── Reenvío desde el dashboard ────────────────────────────────────────────────
+// Vuelve a poner en cola un aviso que agotó sus reintentos (p. ej. tras arreglar el servidor del comercio).
+export async function resendEvent(auth: Auth, eventId: string): Promise<boolean> {
+  const rows = await sql`
+    UPDATE events SET delivery_status = 'pending', attempts = 0, last_error = NULL, next_attempt_at = now()
+    WHERE id = ${eventId} AND merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
+      AND delivery_status = 'failed'
+    RETURNING id`;
+  return rows.length > 0;
 }

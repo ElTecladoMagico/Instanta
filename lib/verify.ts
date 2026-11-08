@@ -1,9 +1,9 @@
 // Decide si una transacción de la blockchain paga un pago (ADR-008, ADR-013, ADR-015).
 // Función pura: no llama a la red ni a la base de datos. Recibe los datos tal como los devuelve el nodo.
-import type { InternalTransfer } from "./blockscout.ts";
+import type { Currency } from "./money.ts";
 
 export type Intent = {
-  currency: "usdc" | "eth";
+  currency: Currency;
   amount: bigint; // unidades mínimas (USDC: 6 decimales; ETH: wei)
   payTo: string; // cartera del comercio
   tokenAddress: string | null; // contrato del token; null si la moneda es ETH
@@ -12,6 +12,9 @@ export type Intent = {
   // null en pagos enviados antes de existir esta regla.
   payer: string | null;
 };
+
+// Transferencia interna de ETH, ya normalizada por lib/blockscout.ts (direcciones en minúsculas).
+export type InternalTransfer = { type: string; from: string; to: string | null; value: string; success: boolean };
 
 // Respuestas del nodo, en hexadecimal (ver scripts/capture-tx.ts).
 export type ChainTx = {
@@ -22,7 +25,15 @@ export type ChainTx = {
   internalTransfers?: InternalTransfer[];
 };
 
-export type FailureCode = "reverted" | "wrong_recipient" | "wrong_token" | "wrong_payer" | "amount_mismatch" | "tx_too_old";
+// tx_not_found no lo devuelve verify(): lo pone settle.ts cuando el nodo no conoce la transacción.
+export type FailureCode =
+  | "reverted"
+  | "wrong_recipient"
+  | "wrong_token"
+  | "wrong_payer"
+  | "amount_mismatch"
+  | "tx_too_old"
+  | "tx_not_found";
 
 export type Verdict =
   | { status: "succeeded"; amountReceived: bigint }

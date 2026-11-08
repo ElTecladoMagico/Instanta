@@ -18,6 +18,7 @@
 | [014](014-migraciones-con-alembic.md) | Migraciones con Alembic (SQL a mano) en vez del script propio | Aceptada |
 | [015](015-eth-desde-cuentas-inteligentes.md) | Pagos en ETH desde cuentas inteligentes (EIP-7702) vía transferencias internas de Blockscout | Aceptada |
 | [016](016-proxy-compartido-en-la-vps.md) | HTTPS con un proxy compartido de la VPS en vez de un Caddy propio | Aceptada |
+| [017](017-arquitectura-interna.md) | Arquitectura interna: núcleo puro y un módulo por agregado, sin capas formales | Aceptada |
 
 ## Orden de implementación
 

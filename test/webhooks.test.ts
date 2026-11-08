@@ -91,6 +91,8 @@ test("el comercio responde 200 → delivered; el aviso va firmado y lleva el eve
   assert.equal(body.type, "payment_intent.succeeded");
   assert.equal(body.data.object.id, "pi_x");
   assert.equal(body.delivery_status, undefined); // eso es interno, no va en el aviso
+  // Lo que firma el comercio es el texto exacto: mismas claves y en el mismo orden que la API de eventos.
+  assert.deepEqual(Object.keys(body), ["id", "object", "livemode", "type", "created", "data"]);
 });
 
 test("el comercio responde 500 → sigue pending, reintento en 1 minuto y se guarda el error", async () => {

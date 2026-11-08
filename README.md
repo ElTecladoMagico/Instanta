@@ -35,7 +35,7 @@ Contrato completo de la API: [`docs/api/openapi.yaml`](docs/api/openapi.yaml). E
 | Despliegue | VPS con Docker Compose; HTTPS con un proxy compartido de la VPS (ADR-016) |
 
 ```
-lib/            lógica (con tests): pagos, verificación on-chain, webhooks, API keys, SSRF…
+lib/            lógica (con tests): núcleo puro (verify, money), un módulo por agregado y adaptadores (ADR-017)
 src/app/v1/     API REST pública (rutas finas que llaman a lib/)
 src/app/pay/    página de pago del comprador
 src/app/dashboard/  panel del comercio (Server Components + Server Actions)
@@ -71,7 +71,7 @@ npm run worker                      # en otra terminal
 
 ## Documentación
 
-- [`docs/decisions/`](docs/decisions/README.md): decisiones de arquitectura (ADR 001–016) y calendario.
+- [`docs/decisions/`](docs/decisions/README.md): decisiones de arquitectura (ADR 001–017) y calendario.
 - [`docs/progreso/`](docs/progreso/README.md): diario de lo hecho en cada fase y por qué, con la evidencia de los tests.
 - [`docs/archive/`](docs/archive/): documentos del prototipo inicial.
 

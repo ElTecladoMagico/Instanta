@@ -15,6 +15,7 @@ before(async () => {
     req.on("end", () => {
       lastRequest = JSON.parse(body);
       const { method } = lastRequest as { method: string };
+      if (method === "hang") return; // nodo colgado: acepta la petición y nunca responde
       if (method === "http_error") return res.writeHead(500).end();
       res.writeHead(200, { "content-type": "application/json" });
       if (method === "rpc_error") return res.end(JSON.stringify({ jsonrpc: "2.0", id: 1, error: { code: -32000, message: "boom" } }));
@@ -26,7 +27,10 @@ before(async () => {
   url = `http://127.0.0.1:${address.port}`;
 });
 
-after(() => server.close());
+after(() => {
+  server.closeAllConnections();
+  server.close();
+});
 
 test("rpc envía una petición JSON-RPC 2.0 y devuelve result", async () => {
   const result = await rpc(url, "eth_blockNumber", []);
@@ -40,4 +44,8 @@ test("rpc lanza un error si el nodo responde con error JSON-RPC", async () => {
 
 test("rpc lanza un error si la respuesta HTTP no es 2xx", async () => {
   await assert.rejects(rpc(url, "http_error", []), /http_error: HTTP 500/);
+});
+
+test("rpc lanza un error si el nodo no responde a tiempo (no bloquea el worker)", { timeout: 2000 }, async () => {
+  await assert.rejects(rpc(url, "hang", [], 100), { name: "TimeoutError" });
 });

@@ -3,10 +3,12 @@
 // Cada una obtiene el comercio de la sesión y llama a lib/, que es donde está la lógica (y sus tests).
 import { revalidatePath } from "next/cache";
 import { parseUnits } from "viem";
-import { createApiKey } from "../../../lib/api-keys.ts";
-import { createPaymentLink } from "../../../lib/payment-links.ts";
+import { createApiKey, revokeApiKey } from "../../../lib/api-keys.ts";
+import { createPaymentLink, setPaymentLinkActive } from "../../../lib/payment-links.ts";
 import { createEndpoint, deleteEndpoint } from "../../../lib/webhook-endpoints.ts";
-import { resendEvent, revokeApiKey, setPaymentLinkActive, updateProfile } from "../../../lib/merchants.ts";
+import { resendEvent } from "../../../lib/events.ts";
+import { updateProfile } from "../../../lib/merchants.ts";
+import { DECIMALS, type Currency } from "../../../lib/money.ts";
 import { authFor, getMerchant, LIVEMODE } from "./session.ts";
 
 export type FormState = { error?: string; secret?: string; done?: boolean } | null;
@@ -63,10 +65,10 @@ export async function resend(form: FormData) {
 export async function newPaymentLink(_prev: FormState, form: FormData): Promise<FormState> {
   const merchant = await getMerchant();
   const title = String(form.get("title") ?? "").trim();
-  const currency = form.get("currency") === "eth" ? "eth" : "usdc";
+  const currency: Currency = form.get("currency") === "eth" ? "eth" : "usdc";
   let amount: bigint;
   try {
-    amount = parseUnits(String(form.get("amount") ?? ""), currency === "eth" ? 18 : 6);
+    amount = parseUnits(String(form.get("amount") ?? ""), DECIMALS[currency]);
   } catch {
     return { error: "Enter an amount such as 10 or 0.5." };
   }

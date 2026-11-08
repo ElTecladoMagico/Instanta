@@ -25,13 +25,19 @@ before(async () => {
   server = createServer((req, res) => {
     requested.push(req.url!);
     if (req.url!.includes("0xdead")) return res.writeHead(500).end();
+    if (req.url!.includes("0xhang")) return; // Blockscout colgado: nunca responde
     res.writeHead(200, { "content-type": "application/json" });
+    // Paginación sin fin: siempre dice que hay otra página.
+    if (req.url!.includes("0xloop")) return res.end(JSON.stringify({ items: [], next_page_params: { index: requested.length } }));
     res.end(JSON.stringify(req.url!.includes("items_count=2") ? page2 : page1));
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   url = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
 });
-after(() => server.close());
+after(() => {
+  server.closeAllConnections();
+  server.close();
+});
 
 test("devuelve las transferencias internas de todas las páginas, normalizadas y con su remitente", async () => {
   const transfers = await internalTransfers(url, "0xabc");
@@ -46,4 +52,14 @@ test("devuelve las transferencias internas de todas las páginas, normalizadas y
 
 test("si Blockscout responde con error → lanza (el pago seguirá en processing)", async () => {
   await assert.rejects(internalTransfers(url, "0xdead"), /Blockscout: HTTP 500/);
+});
+
+test("si Blockscout no responde a tiempo → lanza", { timeout: 2000 }, async () => {
+  await assert.rejects(internalTransfers(url, "0xhang", 100), { name: "TimeoutError" });
+});
+
+test("si Blockscout no deja de paginar → lanza tras 20 páginas", { timeout: 2000 }, async () => {
+  const before = requested.length;
+  await assert.rejects(internalTransfers(url, "0xloop"), /Blockscout: más de 20 páginas/);
+  assert.equal(requested.length - before, 20);
 });

@@ -4,17 +4,10 @@ import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { sql } from "../lib/db.ts";
 import { newId } from "../lib/ids.ts";
-import { authenticate, createApiKey } from "../lib/api-keys.ts";
-import { createPaymentLink } from "../lib/payment-links.ts";
-import {
-  ensureMerchant,
-  listApiKeys,
-  listPaymentLinks,
-  resendEvent,
-  revokeApiKey,
-  setPaymentLinkActive,
-  updateProfile,
-} from "../lib/merchants.ts";
+import { authenticate, createApiKey, listApiKeys, revokeApiKey } from "../lib/api-keys.ts";
+import { createPaymentLink, listPaymentLinks, setPaymentLinkActive } from "../lib/payment-links.ts";
+import { resendEvent } from "../lib/events.ts";
+import { ensureMerchant, updateProfile } from "../lib/merchants.ts";
 
 after(() => sql.end());
 

@@ -2,7 +2,7 @@
 // worker/main.ts la repite cada pocos segundos. Cada paso es independiente: si el nodo de la blockchain
 // falla, los pagos esperan a la siguiente vuelta, pero los avisos se siguen enviando.
 import { sql } from "./db.ts";
-import { expirePayments, type Row } from "./payment-intents.ts";
+import { expirePayments, type PaymentIntentRow } from "./payment-intents.ts";
 import { checkPayment } from "./settle.ts";
 import { deliverPendingEvents } from "./webhooks.ts";
 
@@ -11,7 +11,7 @@ export async function runOnce(): Promise<void> {
   await expirePayments("all");
 
   // 2. Comprobar en la cadena los pagos en processing (los más antiguos primero).
-  const processing = await sql<Row[]>`SELECT * FROM payment_intents WHERE status = 'processing' ORDER BY created_at LIMIT 50`;
+  const processing = await sql<PaymentIntentRow[]>`SELECT * FROM payment_intents WHERE status = 'processing' ORDER BY created_at LIMIT 50`;
   for (const row of processing) await checkPayment(row);
 
   // 3. Enviar los avisos pendientes a los comercios.
