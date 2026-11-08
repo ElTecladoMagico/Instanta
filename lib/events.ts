@@ -1,11 +1,8 @@
-// Patrón outbox (ADR-009): el evento del webhook se guarda en la MISMA transacción de la base de datos
-// que el cambio de estado del pago. O se guardan los dos, o ninguno: nunca hay un pago completado sin su aviso.
-// El worker envía después los eventos pendientes (lib/webhooks.ts).
-import type { TransactionSql } from "postgres";
+// Eventos de los pagos (ADR-009): tipos, historial (/v1/events) y reenvío desde el dashboard.
+// Se guardan en la misma transacción que el cambio de estado del pago (outbox, en lib/payment-intents.ts)
+// y el worker los envía después (lib/webhooks.ts).
 import { z } from "zod";
 import { sql } from "./db.ts";
-import { newId } from "./ids.ts";
-import { toApi, type PaymentIntentRow } from "./payment-intents.ts";
 import type { Auth } from "./api-keys.ts";
 
 export const EVENT_TYPES = [
@@ -15,13 +12,6 @@ export const EVENT_TYPES = [
   "payment_intent.expired",
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
-
-// tx: la transacción abierta con sql.begin() en la que se acaba de cambiar el estado del pago.
-export async function recordEvent(tx: TransactionSql, row: PaymentIntentRow, type: EventType): Promise<void> {
-  await tx`
-    INSERT INTO events (id, merchant_id, livemode, type, data)
-    VALUES (${newId("evt")}, ${row.merchant_id}, ${row.livemode}, ${type}, ${tx.json({ object: toApi(row) })})`;
-}
 
 // ── Consulta del historial (/v1/events) ─────────────────────────────────────
 

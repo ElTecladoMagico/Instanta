@@ -1,13 +1,11 @@
 // Comprueba en la blockchain un pago en processing y guarda el resultado (ADR-008).
-// Es la parte con efectos de la verificación: pide los datos al nodo, llama a verify() (pura)
-// y aplica la transición de estado de ADR-007.
-import { numeric, sql } from "./db.ts";
+// Es la parte con efectos de la verificación: pide los datos al nodo y a Blockscout, llama a verify() (pura)
+// y aplica la transición de estado de ADR-007 con markResult (lib/payment-intents.ts).
 import { network } from "./chains.ts";
 import { rpc } from "./rpc.ts";
 import { internalTransfers } from "./blockscout.ts";
-import { verify, type ChainTx, type InternalTransfer, type Verdict } from "./verify.ts";
-import type { PaymentIntentRow } from "./payment-intents.ts";
-import { recordEvent } from "./events.ts";
+import { verify, type ChainTx, type InternalTransfer } from "./verify.ts";
+import { markResult, type PaymentIntentRow } from "./payment-intents.ts";
 
 type Receipt = ChainTx["receipt"] & { blockNumber: string };
 
@@ -59,7 +57,7 @@ export async function checkPayment(row: PaymentIntentRow): Promise<PaymentIntent
   // 2a. El nodo no conoce la transacción: se espera, salvo que haga más de una hora que se envió.
   if (!chainTx) {
     const lost = row.submitted_at !== null && Date.now() - row.submitted_at.getTime() > TX_NOT_FOUND_AFTER_MS;
-    return lost ? save(row, { status: "failed", code: "tx_not_found", amountReceived: 0n }) : row;
+    return lost ? markResult(row, { status: "failed", code: "tx_not_found", amountReceived: 0n }) : row;
   }
 
   // 2b. Decidir (función pura).
@@ -79,28 +77,6 @@ export async function checkPayment(row: PaymentIntentRow): Promise<PaymentIntent
   if (verdict.status === "processing") return row;
   const blockAge = Date.now() / 1000 - Number(BigInt(chainTx.block.timestamp));
   if (verdict.status === "failed" && chainTx.internalTransfers && blockAge < INDEXING_GRACE_SECONDS) return row;
-  return save(row, verdict);
-}
-
-// Un veredicto definitivo: succeeded o failed.
-type Result = Exclude<Verdict, { status: "processing" }>;
-
-// 3. Guardar el resultado y su evento en la misma transacción (ADR-009). La condición de estado
-//    evita pisar un cambio hecho por otro proceso: si dos procesos verifican a la vez, solo uno escribe.
-async function save(row: PaymentIntentRow, verdict: Result): Promise<PaymentIntentRow> {
-  const updated = await sql.begin(async (tx) => {
-    const [changed] = await tx<PaymentIntentRow[]>`
-      UPDATE payment_intents
-      SET status = ${verdict.status},
-          amount_received = ${numeric(verdict.amountReceived)},
-          failure_code = ${verdict.status === "failed" ? verdict.code : null},
-          succeeded_at = ${verdict.status === "succeeded" ? tx`now()` : null}
-      WHERE id = ${row.id} AND status = 'processing'
-      RETURNING *`;
-    if (changed) await recordEvent(tx, changed, `payment_intent.${verdict.status}`);
-    return changed;
-  });
-  if (updated) return updated;
-  const [current] = await sql<PaymentIntentRow[]>`SELECT * FROM payment_intents WHERE id = ${row.id}`;
-  return current;
+  // 3. Guardar el resultado y su evento (lib/payment-intents.ts, ADR-007 y ADR-009).
+  return markResult(row, verdict);
 }

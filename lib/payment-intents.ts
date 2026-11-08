@@ -1,5 +1,18 @@
-// Pagos (PaymentIntents): validación de entradas y SQL de crear, consultar, listar y cancelar (ADR-005, ADR-007).
-// Cada consulta filtra por comercio y por modo: nadie ve los pagos de otro (ADR-004, T6).
+// Pagos (PaymentIntents): validación de entradas, consultas y TODAS las escrituras en payment_intents
+// (ADR-005, ADR-007). Cada consulta del comercio filtra por comercio y por modo: nadie ve los pagos de otro
+// (ADR-004, T6).
+//
+// Máquina de estados (ADR-007). Cada flecha es un UPDATE … WHERE status = <esperado>: si otro proceso ya
+// movió el pago, el UPDATE afecta a 0 filas y no se pisa nada. Las flechas a un estado final guardan su
+// evento en la misma transacción (outbox, ADR-009).
+//
+//   createPaymentIntent ──▶ requires_payment ──markProcessing──▶ processing ──markResult──▶ succeeded
+//                            │  │  ↺ setPayer                       └─────────markResult──▶ failed
+//                            │  └──cancelPaymentIntent──▶ canceled
+//                            └─────expirePayments───────▶ expired
+//
+//   setPayer no cambia el estado: guarda la cartera que firmó el pago (T13), condición para markProcessing.
+import type { TransactionSql } from "postgres";
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { numeric, sql } from "./db.ts";
@@ -7,8 +20,8 @@ import { newId, sha256 } from "./ids.ts";
 import { network } from "./chains.ts";
 import type { Auth } from "./api-keys.ts";
 import { CURRENCIES, type Currency } from "./money.ts";
-import type { FailureCode } from "./verify.ts";
-import { recordEvent } from "./events.ts";
+import type { FailureCode, Verdict } from "./verify.ts";
+import type { EventType } from "./events.ts";
 
 const STATUSES = ["requires_payment", "processing", "succeeded", "failed", "canceled", "expired"] as const;
 export type Status = (typeof STATUSES)[number];
@@ -108,6 +121,55 @@ export async function createPaymentIntent(auth: Auth, params: z.infer<typeof Cre
   return row ? { row, clientSecret } : null;
 }
 
+// Guarda la cartera que firmó el mensaje del pago (T13). Solo mientras se puede pagar; false si no.
+export async function setPayer(id: string, address: string): Promise<boolean> {
+  const [updated] = await sql`
+    UPDATE payment_intents SET payer_address = ${address.toLowerCase()}
+    WHERE id = ${id} AND status = 'requires_payment' AND expires_at > now()
+    RETURNING id`;
+  return Boolean(updated);
+}
+
+// requires_payment → processing con el tx_hash del comprador. Solo antes de caducar y con el pagador ya
+// registrado (T13). UNIQUE(tx_hash) impide que una transacción pague dos pagos (ADR-004, T2).
+// "rejected": el pago no existe o no está en condiciones de recibir el hash.
+export async function markProcessing(clientSecretHash: string, txHash: string): Promise<"ok" | "rejected" | "tx_already_used"> {
+  try {
+    const [updated] = await sql`
+      UPDATE payment_intents SET status = 'processing', tx_hash = ${txHash.toLowerCase()}, submitted_at = now()
+      WHERE client_secret_hash = ${clientSecretHash} AND status = 'requires_payment' AND expires_at > now()
+        AND payer_address IS NOT NULL
+      RETURNING id`;
+    return updated ? "ok" : "rejected";
+  } catch (err) {
+    if ((err as { code?: string }).code === "23505") return "tx_already_used"; // viola UNIQUE(tx_hash)
+    throw err;
+  }
+}
+
+// processing → succeeded | failed, con su evento en la misma transacción (ADR-009). Si dos procesos verifican
+// a la vez, solo uno escribe; el otro recibe el pago tal como quedó.
+export async function markResult(
+  row: PaymentIntentRow,
+  verdict: Exclude<Verdict, { status: "processing" }>,
+): Promise<PaymentIntentRow> {
+  const updated = await sql.begin(async (tx) => {
+    const [changed] = await tx<PaymentIntentRow[]>`
+      UPDATE payment_intents
+      SET status = ${verdict.status},
+          amount_received = ${numeric(verdict.amountReceived)},
+          failure_code = ${verdict.status === "failed" ? verdict.code : null},
+          succeeded_at = ${verdict.status === "succeeded" ? tx`now()` : null}
+      WHERE id = ${row.id} AND status = 'processing'
+      RETURNING *`;
+    if (changed) await recordEvent(tx, changed, `payment_intent.${verdict.status}`);
+    return changed;
+  });
+  if (updated) return updated;
+  const [current] = await sql<PaymentIntentRow[]>`SELECT * FROM payment_intents WHERE id = ${row.id}`;
+  return current;
+}
+
 // Caducidad perezosa (ADR-007): antes de leer, los pagos sin pagar que pasaron de expires_at pasan a expired,
 // cada uno con su evento en la misma transacción (ADR-009). El alcance es un comercio y modo, un checkout
 // o todos los pagos ("all", lo usa el worker).
@@ -166,4 +228,14 @@ export async function cancelPaymentIntent(auth: Auth, id: string): Promise<Payme
   });
   if (row) return row;
   return (await getPaymentIntent(auth, id)) ? "unexpected_state" : "not_found";
+}
+
+// Patrón outbox (ADR-009): el evento del webhook se guarda en la MISMA transacción de la base de datos que el
+// cambio de estado del pago. O se guardan los dos, o ninguno: nunca hay un pago completado sin su aviso.
+// El worker envía después los eventos pendientes (lib/webhooks.ts).
+// tx: la transacción abierta con sql.begin() en la que se acaba de cambiar el estado del pago.
+async function recordEvent(tx: TransactionSql, row: PaymentIntentRow, type: EventType): Promise<void> {
+  await tx`
+    INSERT INTO events (id, merchant_id, livemode, type, data)
+    VALUES (${newId("evt")}, ${row.merchant_id}, ${row.livemode}, ${type}, ${tx.json({ object: toApi(row) })})`;
 }
