@@ -245,6 +245,23 @@ test("una firma hecha para otro pago no sirve → 400 invalid_signature", async 
   assert.equal((await postPayer(secret, { address: wallet.address, signature })).status, 400);
 });
 
+test("cartera inteligente: el nodo valida la firma en su contrato (ERC-1271/6492) → 200", async () => {
+  const { id, secret } = await newIntent({ payerAddress: null });
+  const smartAccount = "0x" + "ab".repeat(20);
+  node.setContractSignatureValid(true);
+  const res = await postPayer(secret, { address: smartAccount, signature: "0x" + "cd".repeat(100) });
+  node.setContractSignatureValid(false);
+  assert.equal(res.status, 200);
+  const [row] = await sql`SELECT payer_address FROM payment_intents WHERE id = ${id}`;
+  assert.equal(row.payer_address, smartAccount);
+});
+
+test("cartera inteligente cuyo contrato rechaza la firma → 400 invalid_signature", async () => {
+  const { secret } = await newIntent({ payerAddress: null });
+  const res = await postPayer(secret, { address: "0x" + "ab".repeat(20), signature: "0x" + "cd".repeat(100) });
+  assert.equal(res.status, 400);
+});
+
 test("dirección o firma mal formadas → 400 parameter_invalid", async () => {
   const { secret } = await newIntent({ payerAddress: null });
   assert.equal((await postPayer(secret, { address: "0x1234", signature: "0xab" })).status, 400);

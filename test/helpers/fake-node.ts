@@ -21,6 +21,7 @@ export async function startFakeNode() {
   let down = false;
   let blockscoutDown = false;
   const hiddenBlocks = new Set<string>(); // simula un nodo que aún no tiene el bloque
+  let contractSignatureValid = false; // respuesta de eth_call al validar la firma de una cartera inteligente
 
   const server = createServer((req, res) => {
     let body = "";
@@ -35,6 +36,7 @@ export async function startFakeNode() {
         : method === "eth_getTransactionReceipt" ? (fixture?.receipt ?? null)
         : method === "eth_getBlockByNumber" ? (hiddenBlocks.has(params[0]) ? null : (blocks.get(params[0]) ?? null))
         : method === "eth_blockNumber" ? head
+        : method === "eth_call" ? "0x" + (contractSignatureValid ? "1" : "0").padStart(64, "0")
         : null;
       res.writeHead(200, { "content-type": "application/json" });
       res.end(JSON.stringify({ jsonrpc: "2.0", id: 1, result }));
@@ -62,6 +64,8 @@ export async function startFakeNode() {
     // Fija el bloque actual como "bloque de la transacción + n - 1", es decir, n confirmaciones.
     setConfirmations: (fixture: Fixture, n: number) => (head = "0x" + (BigInt(fixture.block.number) + BigInt(n - 1)).toString(16)),
     setDown: (value: boolean) => (down = value),
+    // Simula el contrato de una cartera inteligente que acepta (o no) la firma (ERC-1271/6492).
+    setContractSignatureValid: (value: boolean) => (contractSignatureValid = value),
     setBlockscoutDown: (value: boolean) => (blockscoutDown = value),
     // El nodo devuelve el recibo pero todavía no el bloque (pasa con nodos públicos balanceados).
     hideBlock: (fixture: Fixture, hidden: boolean) =>
