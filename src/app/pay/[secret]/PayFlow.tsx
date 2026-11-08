@@ -5,7 +5,7 @@
 // para registrar la cartera pagadora (T13), 4) envía la transacción, 5) manda el hash al servidor
 // y 6) consulta el estado mientras se confirma.
 import { useCallback, useEffect, useState } from "react";
-import { useAccount, useConnect, useSendTransaction, useSignMessage, useSwitchChain, useWriteContract } from "wagmi";
+import { useAccount, useConnect, useDisconnect, useSendTransaction, useSignMessage, useSwitchChain, useWriteContract } from "wagmi";
 import { AlertCircle, CheckCircle, ExternalLink, Loader2, Shield, Wallet } from "lucide-react";
 import { ERC20_ABI } from "../../../../lib/usdc/abi";
 import { explorerTxUrl } from "../../../../lib/chains";
@@ -73,6 +73,7 @@ export function PayFlow({ secret }: { secret: string }) {
   const { sendTransactionAsync } = useSendTransaction();
   const { writeContractAsync } = useWriteContract();
   const { signMessageAsync } = useSignMessage();
+  const { disconnect } = useDisconnect();
 
   const load = useCallback(async () => {
     const res = await fetch(`/v1/checkout/${secret}`);
@@ -150,7 +151,14 @@ export function PayFlow({ secret }: { secret: string }) {
             });
       await submit(txHash);
     } catch (err) {
-      setError(err instanceof Error ? err.message.split("\n")[0] : "Something went wrong.");
+      // 4100 (EIP-1193): la cartera no tiene autorizada esta cuenta para esta web, p. ej. porque la página
+      // recordó una conexión antigua o el comprador cambió de cuenta. Se desconecta para volver a pedir permiso.
+      if ((err as { name?: string }).name === "UnauthorizedProviderError" || (err as { code?: number }).code === 4100) {
+        disconnect();
+        setError("Your wallet has not authorized this account for this site. Connect your wallet again.");
+      } else {
+        setError(err instanceof Error ? err.message.split("\n")[0] : "Something went wrong.");
+      }
     } finally {
       setPaying(false);
     }
