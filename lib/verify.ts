@@ -1,9 +1,10 @@
 // Decide si una transacción de la blockchain paga un pago (ADR-008, ADR-013, ADR-015).
 // Función pura: no llama a la red ni a la base de datos. Recibe los datos tal como los devuelve el nodo.
 import type { InternalTransfer } from "./blockscout.ts";
+import type { Currency } from "./money.ts";
 
 export type Intent = {
-  currency: "usdc" | "eth";
+  currency: Currency;
   amount: bigint; // unidades mínimas (USDC: 6 decimales; ETH: wei)
   payTo: string; // cartera del comercio
   tokenAddress: string | null; // contrato del token; null si la moneda es ETH

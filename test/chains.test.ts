@@ -1,7 +1,7 @@
 // Red de cada modo. Este archivo se ejecuta en su propio proceso: aquí no hay URLs de nodo configuradas.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { network } from "../lib/chains.ts";
+import { explorerTxUrl, network } from "../lib/chains.ts";
 
 test("test → Base Sepolia, 2 bloques desde el último y nodo público por defecto", () => {
   delete process.env.BASE_SEPOLIA_RPC_URL;
@@ -23,4 +23,9 @@ test("live → Base, bloque safe (lote publicado en Ethereum) y nodo público po
   assert.equal(net.rpcUrl(), "https://mainnet.base.org");
   delete process.env.BASE_BLOCKSCOUT_URL;
   assert.equal(net.blockscoutUrl(), "https://base.blockscout.com");
+});
+
+test("enlace a la transacción en el explorador de la red correcta", () => {
+  assert.equal(explorerTxUrl(84532, "0xabc"), "https://sepolia.basescan.org/tx/0xabc");
+  assert.equal(explorerTxUrl(8453, "0xabc"), "https://basescan.org/tx/0xabc");
 });

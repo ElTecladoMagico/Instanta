@@ -6,6 +6,7 @@ import { numeric, sql } from "./db.ts";
 import { newId, sha256 } from "./ids.ts";
 import { network } from "./chains.ts";
 import type { Auth } from "./api-keys.ts";
+import { CURRENCIES } from "./money.ts";
 import { recordEvent } from "./events.ts";
 
 const STATUSES = ["requires_payment", "processing", "succeeded", "failed", "canceled", "expired"] as const;
@@ -14,7 +15,7 @@ const STATUSES = ["requires_payment", "processing", "succeeded", "failed", "canc
 // así que el cliente no puede elegir pay_to, la red ni el token (ADR-004, T5).
 export const CreateParams = z.strictObject({
   amount: z.string().regex(/^[1-9][0-9]{0,77}$/, "must be a positive integer in the smallest unit, as a string"),
-  currency: z.enum(["usdc", "eth"]),
+  currency: z.enum(CURRENCIES),
   description: z.string().max(500).optional(),
   metadata: z
     .record(z.string(), z.string().max(500))

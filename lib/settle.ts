@@ -6,6 +6,7 @@ import { network } from "./chains.ts";
 import { rpc } from "./rpc.ts";
 import { internalTransfers, type InternalTransfer } from "./blockscout.ts";
 import { verify, type ChainTx } from "./verify.ts";
+import type { Currency } from "./money.ts";
 import type { Row } from "./payment-intents.ts";
 import { recordEvent } from "./events.ts";
 
@@ -65,7 +66,7 @@ export async function checkPayment(row: Row): Promise<Row> {
   // 2b. Decidir (función pura).
   const verdict = verify(
     {
-      currency: row.currency as "usdc" | "eth",
+      currency: row.currency as Currency,
       amount: row.amount,
       payTo: row.pay_to,
       tokenAddress: row.token_address,

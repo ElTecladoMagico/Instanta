@@ -1,5 +1,5 @@
-// Red, contrato de USDC, nodo RPC, explorador Blockscout y cuándo se da un pago por bueno según el modo de la
-// API key (ADR-007, ADR-008, ADR-013, ADR-015).
+// Red, contrato de USDC, nodo RPC, explorador Blockscout, explorador para personas (Basescan) y cuándo se da
+// un pago por bueno según el modo de la API key (ADR-007, ADR-008, ADR-013, ADR-015).
 // Base produce un bloque cada 200 ms desde la actualización Denim (5-11-2026). En live no se cuentan bloques:
 // se espera a que el del pago sea "safe", con su lote ya publicado en Ethereum (unos 2 min). En test basta
 // con 2 bloques (< 1 s) para que las pruebas sean ágiles.
@@ -11,6 +11,7 @@ const NETWORKS = {
     head: "latest" as const, // cuenta desde el último bloque
     rpcUrl: () => process.env.BASE_SEPOLIA_RPC_URL ?? "https://sepolia.base.org",
     blockscoutUrl: () => process.env.BASE_SEPOLIA_BLOCKSCOUT_URL ?? "https://base-sepolia.blockscout.com",
+    explorerUrl: "https://sepolia.basescan.org",
   },
   live: {
     chainId: 8453, // Base
@@ -19,7 +20,14 @@ const NETWORKS = {
     head: "safe" as const, // cuenta desde el último bloque cuyo lote está publicado en Ethereum
     rpcUrl: () => process.env.BASE_RPC_URL ?? "https://mainnet.base.org",
     blockscoutUrl: () => process.env.BASE_BLOCKSCOUT_URL ?? "https://base.blockscout.com",
+    explorerUrl: "https://basescan.org",
   },
 };
 
 export const network = (livemode: boolean) => (livemode ? NETWORKS.live : NETWORKS.test);
+
+// Enlace a la transacción en el explorador de su red (página de pago y dashboard).
+export function explorerTxUrl(chainId: number, txHash: string): string {
+  const { explorerUrl } = chainId === NETWORKS.live.chainId ? NETWORKS.live : NETWORKS.test;
+  return `${explorerUrl}/tx/${txHash}`;
+}

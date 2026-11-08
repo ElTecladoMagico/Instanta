@@ -1,6 +1,6 @@
 // Payment links: botones para webs sin backend (ADR-010).
 import { listPaymentLinks } from "../../../../lib/merchants.ts";
-import { formatAmount } from "../../../../lib/format.ts";
+import { formatAmount } from "../../../../lib/money.ts";
 import { authFor, getMerchant } from "../session.ts";
 import { newPaymentLink, toggleLink } from "../actions.ts";
 import { ActionForm } from "../ActionForm.tsx";

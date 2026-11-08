@@ -1,7 +1,7 @@
-// Cómo se muestran importes y enlaces en la página de pago.
+// Cómo se muestran los importes en la página de pago y en el dashboard.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { explorerTxUrl, formatAmount } from "../lib/format.ts";
+import { formatAmount } from "../lib/money.ts";
 
 test("USDC (6 decimales): unidades mínimas → texto legible", () => {
   assert.equal(formatAmount("10000000", "usdc"), "10 USDC");
@@ -12,9 +12,4 @@ test("USDC (6 decimales): unidades mínimas → texto legible", () => {
 test("ETH (18 decimales): wei → texto legible, también por encima de 2^63", () => {
   assert.equal(formatAmount("1000000000000000", "eth"), "0.001 ETH");
   assert.equal(formatAmount("1000000000000000000000000", "eth"), "1000000 ETH");
-});
-
-test("enlace a la transacción en el explorador de la red correcta", () => {
-  assert.equal(explorerTxUrl(84532, "0xabc"), "https://sepolia.basescan.org/tx/0xabc");
-  assert.equal(explorerTxUrl(8453, "0xabc"), "https://basescan.org/tx/0xabc");
 });

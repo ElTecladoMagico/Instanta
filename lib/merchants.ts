@@ -4,6 +4,7 @@ import { isAddress } from "viem";
 import { sql } from "./db.ts";
 import { newId } from "./ids.ts";
 import type { Auth } from "./api-keys.ts";
+import type { Currency } from "./money.ts";
 
 export type Merchant = { id: string; email: string; name: string | null; payout_address: string | null };
 
@@ -43,7 +44,7 @@ export async function revokeApiKey(merchantId: string, keyId: string): Promise<b
 
 // ── Payment links ──
 export function listPaymentLinks(auth: Auth) {
-  return sql<{ id: string; title: string; amount: bigint; currency: "usdc" | "eth"; active: boolean; created_at: Date }[]>`
+  return sql<{ id: string; title: string; amount: bigint; currency: Currency; active: boolean; created_at: Date }[]>`
     SELECT id, title, amount, currency, active, created_at FROM payment_links
     WHERE merchant_id = ${auth.merchantId} AND livemode = ${auth.livemode}
     ORDER BY created_at DESC`;

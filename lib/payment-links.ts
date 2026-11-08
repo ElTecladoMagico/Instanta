@@ -4,8 +4,7 @@ import { numeric, sql } from "./db.ts";
 import { newId } from "./ids.ts";
 import { createPaymentIntent, toApi } from "./payment-intents.ts";
 import type { Auth } from "./api-keys.ts";
-
-type Currency = "usdc" | "eth";
+import type { Currency } from "./money.ts";
 
 export async function createPaymentLink(auth: Auth, link: { title: string; amount: bigint; currency: Currency }): Promise<string> {
   const id = newId("pl");
