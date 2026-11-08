@@ -202,8 +202,18 @@ export function PayFlow({ secret }: { secret: string }) {
     );
   }
   if (session.status === "expired" || session.status === "canceled") {
-    return <Card icon={<AlertCircle className="w-10 h-10 text-error" />} title={`Payment ${session.status}`}
-                 text="Ask the merchant for a new payment link." />;
+    // Si el comprador llegó a pagar pero el hash no se registró, se le muestra para que lo reclame al comercio.
+    return (
+      <Card icon={<AlertCircle className="w-10 h-10 text-error" />} title={`Payment ${session.status}`}
+            text={unsentHash ? "Your transaction was sent but could not be registered. Send this link to the merchant:" : "Ask the merchant for a new payment link."}>
+        {unsentHash && (
+          <a href={explorerTxUrl(session.chain_id, unsentHash)} target="_blank" rel="noopener noreferrer"
+             className="inline-flex items-center gap-2 mt-6 text-primary font-medium break-all">
+            <ExternalLink className="w-4 h-4 shrink-0" /> {unsentHash}
+          </a>
+        )}
+      </Card>
+    );
   }
 
   // requires_payment
