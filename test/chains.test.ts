@@ -3,21 +3,23 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { network } from "../lib/chains.ts";
 
-test("test → Base Sepolia, 2 confirmaciones y nodo público por defecto", () => {
+test("test → Base Sepolia, 2 bloques desde el último y nodo público por defecto", () => {
   delete process.env.BASE_SEPOLIA_RPC_URL;
   const net = network(false);
   assert.equal(net.chainId, 84532);
   assert.equal(net.confirmations, 2);
+  assert.equal(net.head, "latest");
   assert.equal(net.rpcUrl(), "https://sepolia.base.org");
   delete process.env.BASE_SEPOLIA_BLOCKSCOUT_URL;
   assert.equal(net.blockscoutUrl(), "https://base-sepolia.blockscout.com");
 });
 
-test("live → Base, 10 confirmaciones y nodo público por defecto", () => {
+test("live → Base, bloque safe (lote publicado en Ethereum) y nodo público por defecto", () => {
   delete process.env.BASE_RPC_URL;
   const net = network(true);
   assert.equal(net.chainId, 8453);
-  assert.equal(net.confirmations, 10);
+  assert.equal(net.confirmations, 1);
+  assert.equal(net.head, "safe");
   assert.equal(net.rpcUrl(), "https://mainnet.base.org");
   delete process.env.BASE_BLOCKSCOUT_URL;
   assert.equal(net.blockscoutUrl(), "https://base.blockscout.com");

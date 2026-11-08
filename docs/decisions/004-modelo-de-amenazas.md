@@ -43,7 +43,7 @@ Antes de implementar, se lista cada amenaza con su control y el test que demuest
 | T7 | Filtración de API keys | Se guarda solo el SHA-256; la clave se muestra una vez; revocación | La BD no contiene claves en claro |
 | T8 | Webhook falsificado hacia el comercio | Firma HMAC-SHA256 con marca de tiempo (ADR-009) | Firma alterada o antigua → el ejemplo de verificación la rechaza |
 | T9 | Adivinar ids de pago | Ids con 128 bits aleatorios de `crypto.randomBytes` | — |
-| T10 | Reorganización de la cadena tras confirmar | N confirmaciones antes de `succeeded` (ADR-008) | — (riesgo documentado) |
+| T10 | Reorganización de la cadena tras confirmar | En live, el bloque debe ser `safe` (lote publicado en Ethereum) antes de `succeeded`; en test, 2 bloques (ADR-008) | `settle.test.ts`: live sin `safe` → `processing`; con `safe` → `succeeded` |
 | T11 | Clickjacking del checkout embebido | La firma de la transacción ocurre en la cartera, fuera del iframe; el iframe no puede mover fondos por sí solo | — (riesgo aceptado) |
 | T12 | Secretos en el repositorio | `.env` fuera de git; ninguna credencial en URLs de remotes | Revisión manual antes de cada release |
 | T13 | Reclamar una transferencia ajena a la cartera del comercio (el comprador abre un pago y envía el hash de otra persona) | El comprador firma antes de pagar un mensaje ligado al pago (`POST /checkout/{secret}/payer`, EOA o ERC-1271/6492); sin pagador no se admite `tx_hash`, y `verify()` solo cuenta fondos que salen de esa cartera (`topics[1]` del `Transfer`, `tx.from` o remitente de la llamada interna) | Firma ajena o de otro pago → `400 invalid_signature`; `submit` sin pagador → `409 payer_required`; transferencia ajena → `failed wrong_payer` |

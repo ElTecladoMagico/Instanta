@@ -21,7 +21,7 @@ const TX_NOT_FOUND_AFTER_MS = 60 * 60 * 1000;
 
 export async function checkPayment(row: Row): Promise<Row> {
   if (row.status !== "processing" || !row.tx_hash) return row;
-  const { rpcUrl, blockscoutUrl, confirmations: required } = network(row.livemode);
+  const { rpcUrl, blockscoutUrl, confirmations: required, head: headTag } = network(row.livemode);
 
   // 1. Datos de la blockchain. Si la transacción aún no está en un bloque, o el nodo falla,
   //    el pago sigue en processing y se volverá a comprobar más tarde.
@@ -36,7 +36,9 @@ export async function checkPayment(row: Row): Promise<Row> {
     if (transaction && receipt) {
       const [block, head] = await Promise.all([
         rpc<ChainTx["block"] | null>(url, "eth_getBlockByNumber", [receipt.blockNumber, false]),
-        rpc<string>(url, "eth_blockNumber", []),
+        headTag === "safe"
+          ? rpc<{ number: string }>(url, "eth_getBlockByNumber", ["safe", false]).then((b) => b.number)
+          : rpc<string>(url, "eth_blockNumber", []),
       ]);
       // Los nodos públicos reparten las peticiones entre varios servidores y alguno puede ir un bloque
       // por detrás: tener el recibo no garantiza tener ya el bloque. Se vuelve a intentar más tarde.
