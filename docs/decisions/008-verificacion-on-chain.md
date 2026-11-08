@@ -58,7 +58,7 @@ La decodificación del evento se hace a mano (`topics[2]` es el destinatario con
 ## Cuándo se verifica
 
 - **Al recibir el `submit`:** verificación inmediata. Si aún no hay recibo o faltan confirmaciones, queda en `processing`.
-- **En el worker:** cada pocos segundos recorre los pagos en `processing` (`SELECT ... FOR UPDATE SKIP LOCKED`), sin depender de que alguien tenga el checkout abierto.
+- **En el worker:** cada pocos segundos recorre los pagos en `processing` (un `SELECT` sin bloqueo, los 50 más antiguos), sin depender de que alguien tenga el checkout abierto. Si la API y el worker verifican el mismo pago a la vez, el `UPDATE ... WHERE status = 'processing'` de ADR-007 hace que solo uno escriba el resultado y su evento; `SKIP LOCKED` solo se usa en la cola de webhooks (ADR-009).
 - **Al consultar** `GET /v1/payment_intents/:id` en `processing`: una verificación oportunista.
 
 Ya no hay un cron que recorra todos los pagos cada 5 s.
@@ -83,3 +83,4 @@ Asociar por `tx_hash` enviado desde el checkout con `UNIQUE(tx_hash)`. Verificar
 ## Cambios
 
 - 2026-11-08: Base produce un bloque cada 200 ms desde la actualización Denim (21-10-2026 en Base Sepolia y 5-11-2026 en la red principal), así que contar N bloques dejó de tener sentido: 10 bloques son unos 2 s. En live, `succeeded` pasa a significar que el bloque del pago es `safe`, es decir, que su lote ya está publicado en Ethereum (unos 2 min según la documentación de Base). La finalidad en L1 llega unos 13 min después. En test se mantienen 2 bloques desde el último, para que las pruebas sean ágiles. Configuración en `lib/chains.ts` (`head` y `confirmations`).
+- 2026-11-08: se corrige "Cuándo se verifica". El worker no usa `FOR UPDATE SKIP LOCKED` para los pagos en `processing`, como decía este ADR: los lee sin bloqueo y la protección frente a dos verificaciones simultáneas es el `UPDATE` condicional de ADR-007 (`markResult` en `lib/payment-intents.ts`, ADR-017).

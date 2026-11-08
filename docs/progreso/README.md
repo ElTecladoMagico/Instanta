@@ -21,3 +21,6 @@ Cada entrada sigue la misma estructura: **qué se hizo**, **por qué**, **cómo*
 | 12 | [Dashboard, tienda de ejemplo y retirada de Convex](12-dashboard-demo.md) | 02/10/2026 | 8 |
 | 13 | [HTTPS con un proxy compartido de la VPS](13-proxy-compartido.md) | 01/10/2026 | — |
 | 14 | [El pagador firma antes de pagar (T13)](14-pagador.md) | 08/11/2026 | — |
+| 15 | [No empezar a pagar con menos de 5 min y no perder el hash pendiente](15-caducidad-checkout.md) | 08/11/2026 | — |
+| 16 | [Finalidad `safe` en live tras Denim](16-finalidad-safe.md) | 08/11/2026 | — |
+| 17 | [Consolidación de la arquitectura interna (ADR-017)](17-consolidacion-arquitectura.md) | 08/11/2026 | — |
