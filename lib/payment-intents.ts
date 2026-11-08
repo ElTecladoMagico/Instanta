@@ -50,6 +50,7 @@ export type Row = {
   expires_at: Date;
   succeeded_at: Date | null;
   submitted_at: Date | null;
+  payer_address: string | null;
 };
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

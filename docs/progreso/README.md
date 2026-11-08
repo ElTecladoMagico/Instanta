@@ -20,3 +20,4 @@ Cada entrada sigue la misma estructura: **qué se hizo**, **por qué**, **cómo*
 | 11 | [Eventos, webhooks y worker](11-webhooks-worker.md) | 01/10/2026 | 7 |
 | 12 | [Dashboard, tienda de ejemplo y retirada de Convex](12-dashboard-demo.md) | 02/10/2026 | 8 |
 | 13 | [HTTPS con un proxy compartido de la VPS](13-proxy-compartido.md) | 01/10/2026 | — |
+| 14 | [El pagador firma antes de pagar (T13)](14-pagador.md) | 08/11/2026 | — |

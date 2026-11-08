@@ -8,11 +8,15 @@ import { createApiKey } from "../lib/api-keys.ts";
 import { createPaymentIntent } from "../lib/payment-intents.ts";
 import * as session from "../src/app/v1/checkout/[client_secret]/route.ts";
 import * as submit from "../src/app/v1/checkout/[client_secret]/submit/route.ts";
+import * as payer from "../src/app/v1/checkout/[client_secret]/payer/route.ts";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { payerMessage } from "../lib/payer.ts";
 import * as merchantGet from "../src/app/v1/payment_intents/[id]/route.ts";
 import { loadFixture, randomTxHash, startFakeNode } from "./helpers/fake-node.ts";
 
 const usdc = loadFixture("usdc-transfer"); // 1000 unidades de USDC a 0xb733…2810
 const RECIPIENT = "0xb733d15fc0e90f0642fd369796c8025f18742810";
+const FIXTURE_PAYER = "0x28761425554dc913788dbec7e502796665edd96e"; // topics[1] del Transfer del fixture
 
 let node: Awaited<ReturnType<typeof startFakeNode>>;
 before(async () => {
@@ -25,7 +29,9 @@ after(async () => {
 });
 
 // Un pago de 1000 unidades de USDC a la cartera del fixture, creado justo antes de su transacción real.
-async function newIntent({ expired = false, name = "Tienda de pruebas" as string | null } = {}) {
+// Por defecto el pagador ya está registrado y es el del fixture (su clave privada no la tenemos, así que se
+// fija en la BD; el endpoint /payer se prueba aparte con una cartera generada en el test).
+async function newIntent({ expired = false, name = "Tienda de pruebas" as string | null, payerAddress = FIXTURE_PAYER as string | null } = {}) {
   const merchantId = newId("mer");
   await sql`INSERT INTO merchants (id, clerk_user_id, email, name, payout_address)
             VALUES (${merchantId}, ${merchantId}, 'shop@example.com', ${name}, ${RECIPIENT})`;
@@ -33,7 +39,8 @@ async function newIntent({ expired = false, name = "Tienda de pruebas" as string
   const created = await createPaymentIntent(auth, { amount: "1000", currency: "usdc", description: "Taza", metadata: { secret_note: "x" } });
   const createdAt = new Date((Number(BigInt(usdc.block.timestamp)) - 60) * 1000);
   const expiresAt = expired ? new Date(Date.now() - 1000) : new Date(Date.now() + 3_600_000);
-  await sql`UPDATE payment_intents SET created_at = ${createdAt}, expires_at = ${expiresAt} WHERE id = ${created!.row.id}`;
+  await sql`UPDATE payment_intents SET created_at = ${createdAt}, expires_at = ${expiresAt}, payer_address = ${payerAddress}
+            WHERE id = ${created!.row.id}`;
   return { id: created!.row.id, secret: created!.clientSecret, key: await createApiKey(merchantId, false) };
 }
 
@@ -193,4 +200,88 @@ test("enviar la transacción guarda cuándo se envió (submitted_at)", async () 
   const [row] = await sql`SELECT submitted_at FROM payment_intents WHERE id = ${id}`;
   assert.ok(row.submitted_at instanceof Date);
   assert.ok(Date.now() - row.submitted_at.getTime() < 60_000);
+});
+
+// ── Pagador (ADR-004, T13) ──────────────────────────────────────────────────
+// Antes de pagar, el comprador firma con su cartera un mensaje ligado al pago. Así demuestra que controla
+// la dirección desde la que pagará, y verify() solo cuenta los fondos que salgan de ella.
+
+const postPayer = (secret: string, body: unknown) =>
+  payer.POST(
+    new Request(`http://localhost/v1/checkout/${secret}/payer`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: typeof body === "string" ? body : JSON.stringify(body),
+    }),
+    params(secret),
+  );
+
+test("firma válida del mensaje del pago → 200 y se guarda el pagador en minúsculas", async () => {
+  const { id, secret } = await newIntent({ payerAddress: null });
+  const wallet = privateKeyToAccount(generatePrivateKey());
+  const signature = await wallet.signMessage({ message: payerMessage(id) });
+  const res = await postPayer(secret, { address: wallet.address, signature });
+  assert.equal(res.status, 200);
+  const [row] = await sql`SELECT payer_address FROM payment_intents WHERE id = ${id}`;
+  assert.equal(row.payer_address, wallet.address.toLowerCase());
+});
+
+test("firma de otra cartera → 400 invalid_signature y no se guarda nada", async () => {
+  const { id, secret } = await newIntent({ payerAddress: null });
+  const claimed = privateKeyToAccount(generatePrivateKey());
+  const signer = privateKeyToAccount(generatePrivateKey());
+  const signature = await signer.signMessage({ message: payerMessage(id) });
+  const res = await postPayer(secret, { address: claimed.address, signature });
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).error.code, "invalid_signature");
+  const [row] = await sql`SELECT payer_address FROM payment_intents WHERE id = ${id}`;
+  assert.equal(row.payer_address, null);
+});
+
+test("una firma hecha para otro pago no sirve → 400 invalid_signature", async () => {
+  const { secret } = await newIntent({ payerAddress: null });
+  const wallet = privateKeyToAccount(generatePrivateKey());
+  const signature = await wallet.signMessage({ message: payerMessage("pi_otro") });
+  assert.equal((await postPayer(secret, { address: wallet.address, signature })).status, 400);
+});
+
+test("cartera inteligente: el nodo valida la firma en su contrato (ERC-1271/6492) → 200", async () => {
+  const { id, secret } = await newIntent({ payerAddress: null });
+  const smartAccount = "0x" + "ab".repeat(20);
+  node.setContractSignatureValid(true);
+  const res = await postPayer(secret, { address: smartAccount, signature: "0x" + "cd".repeat(100) });
+  node.setContractSignatureValid(false);
+  assert.equal(res.status, 200);
+  const [row] = await sql`SELECT payer_address FROM payment_intents WHERE id = ${id}`;
+  assert.equal(row.payer_address, smartAccount);
+});
+
+test("cartera inteligente cuyo contrato rechaza la firma → 400 invalid_signature", async () => {
+  const { secret } = await newIntent({ payerAddress: null });
+  const res = await postPayer(secret, { address: "0x" + "ab".repeat(20), signature: "0x" + "cd".repeat(100) });
+  assert.equal(res.status, 400);
+});
+
+test("dirección o firma mal formadas → 400 parameter_invalid", async () => {
+  const { secret } = await newIntent({ payerAddress: null });
+  assert.equal((await postPayer(secret, { address: "0x1234", signature: "0xab" })).status, 400);
+});
+
+test("sin pagador registrado no se admite la transacción → 409 payer_required", async () => {
+  const { secret } = await newIntent({ payerAddress: null });
+  const res = await postSubmit(secret, { tx_hash: servedHash() });
+  assert.equal(res.status, 409);
+  assert.equal((await res.json()).error.code, "payer_required");
+});
+
+test("ataque: reclamar una transferencia ajena al comercio → failed wrong_payer", async () => {
+  // El atacante abre un pago, firma con SU cartera y envía el hash de una transferencia que hizo otra
+  // persona (0x2876…) a la cartera del comercio. Antes de T13 ese pago quedaba como cobrado.
+  node.setConfirmations(usdc, 5);
+  const { id, secret } = await newIntent({ payerAddress: null });
+  const attacker = privateKeyToAccount(generatePrivateKey());
+  await postPayer(secret, { address: attacker.address, signature: await attacker.signMessage({ message: payerMessage(id) }) });
+  const body = await (await postSubmit(secret, { tx_hash: servedHash() })).json();
+  assert.equal(body.status, "failed");
+  assert.equal(body.failure_code, "wrong_payer");
 });

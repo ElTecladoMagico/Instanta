@@ -68,6 +68,7 @@ export async function checkPayment(row: Row): Promise<Row> {
       payTo: row.pay_to,
       tokenAddress: row.token_address,
       createdAt: Math.floor(row.created_at.getTime() / 1000),
+      payer: row.payer_address,
     },
     chainTx,
     confirmations,

@@ -46,6 +46,7 @@ Antes de implementar, se lista cada amenaza con su control y el test que demuest
 | T10 | Reorganización de la cadena tras confirmar | N confirmaciones antes de `succeeded` (ADR-008) | — (riesgo documentado) |
 | T11 | Clickjacking del checkout embebido | La firma de la transacción ocurre en la cartera, fuera del iframe; el iframe no puede mover fondos por sí solo | — (riesgo aceptado) |
 | T12 | Secretos en el repositorio | `.env` fuera de git; ninguna credencial en URLs de remotes | Revisión manual antes de cada release |
+| T13 | Reclamar una transferencia ajena a la cartera del comercio (el comprador abre un pago y envía el hash de otra persona) | El comprador firma antes de pagar un mensaje ligado al pago (`POST /checkout/{secret}/payer`, EOA o ERC-1271/6492); sin pagador no se admite `tx_hash`, y `verify()` solo cuenta fondos que salen de esa cartera (`topics[1]` del `Transfer`, `tx.from` o remitente de la llamada interna) | Firma ajena o de otro pago → `400 invalid_signature`; `submit` sin pagador → `409 payer_required`; transferencia ajena → `failed wrong_payer` |
 
 ## Controles que no se negocian
 
@@ -55,6 +56,7 @@ Antes de implementar, se lista cada amenaza con su control y el test que demuest
 - Webhooks firmados.
 - Comprobación de propiedad en cada acceso.
 - Validación de entrada con `zod` en todos los Route Handlers.
+- Solo cuentan los fondos que salen de la cartera que firmó el pago (T13).
 
 ## Consecuencias
 
@@ -64,3 +66,7 @@ Antes de implementar, se lista cada amenaza con su control y el test que demuest
 ## Decisión
 
 Adoptar esta tabla como lista de requisitos de seguridad. Ninguna fase se da por terminada si rompe un control de la tabla.
+
+## Cambios
+
+- 2026-11-08: se añade T13. La revisión de la memoria detectó que `verify()` no comprobaba quién pagaba: con un pago abierto antes de una transferencia ajena a la cartera del comercio, se podía reclamar esa transferencia. Riesgo residual: quien vea el hash de un comprador antes de que este lo envíe puede consumirlo (`UNIQUE(tx_hash)`) en un pago propio, que fallará con `wrong_payer`; el comprador legítimo tendría que pedir ayuda al comercio.

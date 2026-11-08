@@ -202,7 +202,8 @@ paths:
         transacción solo puede pagar un intent: si ya se usó, `409 tx_already_used` (ADR-004, T2).
         El cuerpo no admite importe ni destino: se ignoran los datos que no sean `tx_hash`.
         Solo si está en `requires_payment`; en otro estado, `409 payment_intent_unexpected_state`
-        (no se puede sustituir una transacción ya enviada).
+        (no se puede sustituir una transacción ya enviada). Exige haber registrado antes la cartera
+        pagadora (`/payer`); si no, `409 payer_required` (ADR-004, T13).
       security: []
       requestBody:
         required: true
@@ -216,6 +217,42 @@ paths:
       responses:
         "200":
           description: Estado del pago tras la verificación inicial
+          headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckoutSession" }
+        "400": { $ref: "#/components/responses/Error" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+
+  /v1/checkout/{client_secret}/payer:
+    parameters:
+      - $ref: "#/components/parameters/ClientSecret"
+    post:
+      tags: [Checkout]
+      operationId: registerCheckoutPayer
+      summary: Registrar la cartera que va a pagar
+      description: |
+        El comprador firma con su cartera (personal_sign, sin gas) el mensaje
+        `Instanta: authorize payment {id}`. Se aceptan firmas de cuentas normales y de carteras
+        inteligentes (ERC-1271, ERC-6492). Después, solo cuentan los fondos que salgan de esa
+        cartera (ADR-004, T13). Se puede cambiar mientras el pago siga en `requires_payment`.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [address, signature]
+              properties:
+                address: { type: string, pattern: "^0x[0-9a-fA-F]{40}$" }
+                signature: { type: string, pattern: "^0x[0-9a-fA-F]+$" }
+      responses:
+        "200":
+          description: Pagador registrado
           headers: { Request-Id: { $ref: "#/components/headers/RequestId" } }
           content:
             application/json:
@@ -472,7 +509,7 @@ components:
       description: Ver la máquina de estados de ADR-007. `succeeded`, `failed`, `canceled` y `expired` son finales.
     FailureCode:
       type: string
-      enum: [reverted, amount_mismatch, wrong_recipient, wrong_token, tx_too_old, tx_not_found]
+      enum: [reverted, amount_mismatch, wrong_recipient, wrong_token, wrong_payer, tx_too_old, tx_not_found]
 
     PaymentIntent:
       type: object
