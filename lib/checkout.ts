@@ -55,16 +55,21 @@ export async function getCheckout(clientSecret: string): Promise<CheckoutRow | n
   return { ...(await checkPayment(row)), merchant_name: row.merchant_name };
 }
 
+// Margen mínimo hasta la caducidad para empezar a pagar: firmar, enviar la transacción y mandar el hash
+// lleva segundos, pero si el pago caducara entre medias el comprador pagaría sin que conste.
+const MIN_TIME_TO_PAY_MS = 5 * 60_000;
+
 // El comprador registra la cartera con la que va a pagar, firmando el mensaje del pago (T13). Se puede
 // cambiar mientras no haya enviado la transacción (p. ej. si cambia de cartera).
 export async function registerPayer(
   clientSecret: string,
   address: string,
   signature: string,
-): Promise<CheckoutRow | "not_found" | "unexpected_state" | "invalid_signature"> {
+): Promise<CheckoutRow | "not_found" | "unexpected_state" | "payment_expiring" | "invalid_signature"> {
   const row = await findBySecret(clientSecret);
   if (!row) return "not_found";
   if (row.status !== "requires_payment") return "unexpected_state";
+  if (row.expires_at.getTime() - Date.now() < MIN_TIME_TO_PAY_MS) return "payment_expiring";
   const valid = await isPayerSignature(row.livemode, address as `0x${string}`, payerMessage(row.id), signature as `0x${string}`);
   if (!valid) return "invalid_signature";
   const [updated] = await sql`
