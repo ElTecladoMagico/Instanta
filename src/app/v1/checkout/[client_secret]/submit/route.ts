@@ -15,6 +15,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ cli
   if (result === "unexpected_state") {
     return apiError(409, "invalid_request_error", "payment_intent_unexpected_state", "This payment no longer accepts a transaction.");
   }
+  if (result === "payer_required") {
+    return apiError(409, "invalid_request_error", "payer_required", "Register the paying wallet before submitting a transaction.");
+  }
   if (result === "tx_already_used") {
     return apiError(409, "invalid_request_error", "tx_already_used", "This transaction has already been used to pay another payment.", "tx_hash");
   }
