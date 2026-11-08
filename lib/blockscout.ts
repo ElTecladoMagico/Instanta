@@ -9,12 +9,19 @@ type Page = {
   next_page_params: Record<string, string | number> | null;
 };
 
-export async function internalTransfers(baseUrl: string, txHash: string): Promise<InternalTransfer[]> {
+// Como mucho 20 páginas (unas 1000 transferencias internas, a unas 50 por página): un pago normal tiene unas pocas.
+// Si hay más, se lanza un error y el pago sigue en processing, en vez de dar por fallido un pago que quizá
+// está en la página 21. Y 10 s de espera por página, como en rpc.ts.
+const MAX_PAGES = 20;
+
+export async function internalTransfers(baseUrl: string, txHash: string, timeoutMs = 10_000): Promise<InternalTransfer[]> {
   const transfers: InternalTransfer[] = [];
   let query = "";
   // La API devuelve páginas; next_page_params dice cómo pedir la siguiente (null = no hay más).
-  while (true) {
-    const res = await fetch(`${baseUrl}/api/v2/transactions/${txHash}/internal-transactions${query}`);
+  for (let pages = 0; pages < MAX_PAGES; pages++) {
+    const res = await fetch(`${baseUrl}/api/v2/transactions/${txHash}/internal-transactions${query}`, {
+      signal: AbortSignal.timeout(timeoutMs),
+    });
     if (!res.ok) throw new Error(`Blockscout: HTTP ${res.status}`);
     const page: Page = await res.json();
     for (const item of page.items) {
@@ -29,4 +36,5 @@ export async function internalTransfers(baseUrl: string, txHash: string): Promis
     if (!page.next_page_params) return transfers;
     query = "?" + new URLSearchParams(Object.entries(page.next_page_params).map(([k, v]) => [k, String(v)])).toString();
   }
+  throw new Error(`Blockscout: más de ${MAX_PAGES} páginas de transferencias internas`);
 }
